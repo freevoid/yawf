@@ -65,3 +65,7 @@ class NoAvailableMessagesError(YawfException):
 
 class ResourceNotFoundError(YawfException):
     pass
+
+
+class ConcurrentRevisionUpdate(YawfException):
+    pass

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from yawf.config import STATE_TYPE_CONSTRAINT
+from yawf.config import STATE_TYPE_CONSTRAINT, REVISION_ATTR
 from yawf.exceptions import IllegalStateError,\
          WrongHandlerResultError, PermissionDeniedError,\
          MessageIgnored
@@ -22,6 +22,8 @@ def dispatch(obj, sender, message_id, raw_params=None):
 def dispatch_message(obj, message):
     logger.info(u"Backend got message from %s to %s: %s %s",
             message.sender, obj, message.id, message.raw_params)
+
+    object_revision = getattr(obj, REVISION_ATTR, None)
 
     # can raise WorkflowNotLoadedError
     workflow = get_workflow_by_instance(obj)
@@ -47,13 +49,15 @@ def dispatch_message(obj, message):
         if workflow.is_valid_state(handler_result):
             old_state = obj.state
             new_obj = perform_transition(
-                    workflow, obj.id, old_state, handler_result)
+                    workflow, obj.id, old_state, handler_result,
+                    old_revision=object_revision)
         else:
             raise IllegalStateError(handler_result)
     # if handler returns callable, perform it as single transaction
     elif callable(handler_result):
         new_obj = perform_extended_transition(
-            workflow, obj.id, obj.state, handler_result)
+            workflow, obj.id, obj.state, handler_result,
+            old_revision=object_revision)
     else:
         raise WrongHandlerResultError(handler_result)
 

@@ -4,14 +4,19 @@ import logging
 from django.db import transaction
 
 from yawf.utils import select_for_update
-from yawf.exceptions import OldStateInconsistenceError
+from yamf.config import REVISION_ATTR
+from yawf.exceptions import OldStateInconsistenceError,\
+         ConcurrentRevisionUpdate
 
 logger = logging.getLogger(__name__)
 
 
 @transaction.commit_on_success
-def perform_transition(workflow, obj_id, old_state, new_state):
+def perform_transition(workflow, obj_id, old_state, new_state, old_revision):
     obj = select_for_update(workflow.model_class.objects.filter(id=obj_id))[0]
+    new_revision = getattr(obj, REVISION_ATTR, None)
+    if old_revision is not None and new_revision != old_revision:
+        raise ConcurrentRevisionUpdate(workflow.id, obj_id, obj.state)
     if obj.state != old_state:
         raise OldStateInconsistenceError(obj_id, old_state, obj.state)
 
@@ -24,9 +29,13 @@ def perform_transition(workflow, obj_id, old_state, new_state):
 
 
 @transaction.commit_manually
-def perform_extended_transition(workflow, obj_id, old_state, fun):
+def perform_extended_transition(workflow, obj_id, old_state, fun, old_revision):
     try:
         obj = select_for_update(workflow.model_class.objects.filter(id=obj_id))[0]
+        new_revision = getattr(obj, REVISION_ATTR, None)
+        if old_revision is not None and new_revision != old_revision:
+            raise ConcurrentRevisionUpdate(workflow.id, obj_id, obj.state)
+
         if obj.state != old_state:
             raise OldStateInconsistenceError(obj_id,
                     old_state, obj.state)
