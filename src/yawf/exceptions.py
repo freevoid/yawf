@@ -2,7 +2,7 @@ from coded_exceptions import CodedException
 
 
 class YawfException(CodedException):
-    code = 'gap_exception'
+    pass
 
 
 class WorkflowNotLoadedError(YawfException):

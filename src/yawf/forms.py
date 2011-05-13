@@ -4,9 +4,9 @@ from django import forms
 from django.template import loader as template_loader
 from django.template import Context
 
-from yawf.exceptions import WorkflowNotLoadedError, NoAvailableMessagesError
 from yawf import get_workflow, get_workflow_by_instance
-from yawf.messages.allowed import get_message_specs
+from yawf.exceptions import WorkflowNotLoadedError, NoAvailableMessagesError
+from yawf.messages.allowed import get_allowed
 
 
 def get_create_form_html(workflow_type, sender=None):
@@ -17,8 +17,8 @@ def get_create_form_html(workflow_type, sender=None):
     form = workflow.create_form_cls()
     if not workflow.create_form_template:
         t = template_loader.select_template(
-                ('gap/workflows/%s/create_form.html' % workflow_type,
-                 'gap/workflows/create_form.html'))
+                ('workflows/%s/create_form.html' % workflow_type,
+                 'workflows/create_form.html'))
     else:
         t = template_loader.get_template(workflow.create_form_template)
 
@@ -26,34 +26,37 @@ def get_create_form_html(workflow_type, sender=None):
     return t.render(context)
 
 
-def get_gap_as_html(obj, sender):
+def get_object_as_html(obj, sender):
     workflow_type = obj.workflow_type
-    allowed_messages = get_message_specs(sender, obj)
+    allowed_context = get_allowed(sender, obj)
 
     t = template_loader.select_template(
-            ('gap/workflows/%s/gap_%s.html' % (workflow_type, obj.state),
-                'gap/workflows/%s/gap.html' % workflow_type,
-                'gap/workflows/gap.html'))
+            ('workflows/%s/object_%s.html' % (workflow_type, obj.state),
+                'workflows/%s/object.html' % workflow_type,
+                'workflows/object.html'))
 
-    context = Context({'message_specs': allowed_messages, 'gap': obj})
+    dict_context = {'object': obj}
+    dict_context.update(allowed_context)
+    context = Context(dict_context)
     return t.render(context)
 
 
-def get_gap_action_form_html(obj, sender):
+def get_action_form_html(obj, sender):
     workflow_type = obj.workflow_type
     workflow = get_workflow_by_instance(obj)
-    allowed_messages = get_message_specs(sender, obj)
+    allowed_context = get_allowed(sender, obj)
 
     t = template_loader.select_template(
-            ('gap/workflows/%s/gap_form_%s.html' % (workflow_type, obj.state),
-                'gap/workflows/%s/gap_form.html' % workflow_type,
-                'gap/workflows/gap_form.html'))
+            ('workflows/%s/form_%s.html' % (workflow_type, obj.state),
+                'workflows/%s/form.html' % workflow_type,
+                'workflows/form.html'))
 
+    allowed_messages = allowed_context['allowed_messages']
     if not allowed_messages:
         raise NoAvailableMessagesError(obj.id, sender)
 
-    if callable(workflow.gapformcls_factory):
-        form_cls = workflow.gapformcls_factory(allowed_messages)
+    if callable(workflow.formcls_factory):
+        form_cls = workflow.formcls_factory(allowed_messages)
         form = form_cls(instance=obj)
     else:
         # get all form subclasses from message validators, throw away duplicates
@@ -70,5 +73,7 @@ def get_gap_action_form_html(obj, sender):
         else:
             form = forms.Form()
 
-    context = Context({'form': form, 'message_specs': allowed_messages, 'instance': obj})
+    dict_context = {'form': form, 'instance': obj}
+    dict_context.update(allowed_context)
+    context = Context(dict_context)
     return t.render(context)
