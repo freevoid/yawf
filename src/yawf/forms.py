@@ -6,7 +6,7 @@ from django.template import Context
 
 from yawf import get_workflow, get_workflow_by_instance
 from yawf.exceptions import WorkflowNotLoadedError, NoAvailableMessagesError
-from yawf.messages.allowed import get_allowed
+from yawf.messages.allowed import get_allowed_messages
 
 
 def get_create_form_html(workflow_type, sender=None):
@@ -28,7 +28,7 @@ def get_create_form_html(workflow_type, sender=None):
 
 def get_object_as_html(obj, sender):
     workflow_type = obj.workflow_type
-    allowed_context = get_allowed(sender, obj)
+    allowed_context = get_allowed_messages(sender, obj)
 
     t = template_loader.select_template(
             ('workflows/%s/object_%s.html' % (workflow_type, obj.state),
@@ -44,7 +44,7 @@ def get_object_as_html(obj, sender):
 def get_action_form_html(obj, sender):
     workflow_type = obj.workflow_type
     workflow = get_workflow_by_instance(obj)
-    allowed_context = get_allowed(sender, obj)
+    allowed_context = get_allowed_messages(sender, obj)
 
     t = template_loader.select_template(
             ('workflows/%s/form_%s.html' % (workflow_type, obj.state),
