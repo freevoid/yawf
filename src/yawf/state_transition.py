@@ -4,7 +4,7 @@ import logging
 from django.db import transaction
 
 from yawf.utils import select_for_update
-from yamf.config import REVISION_ATTR
+from yawf.config import REVISION_ATTR
 from yawf.exceptions import OldStateInconsistenceError,\
          ConcurrentRevisionUpdate
 

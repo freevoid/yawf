@@ -1,5 +1,5 @@
 from yawf.exceptions import ResourcePermissionDeniedError
-from yamf.permissions import AndChecker
+from yawf.permissions import AndChecker
 
 
 class WorkflowResource(object):
