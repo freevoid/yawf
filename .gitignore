@@ -2,3 +2,10 @@
 build/
 .ropeproject
 *.egg-info
+# debian-related
+debian/files
+debian/*.debhelper.log
+debian/*.debhelper
+debian/*.substvars
+debian/python-django-yawf/
+debian/python-module-stampdir/
