@@ -240,6 +240,9 @@ class WorkflowBase(object):
         else:
             permission_checkers = permission_checker
 
+        if available_in_states is None:
+            available_in_states = self._valid_states
+
         if not available_in_states:
             raise ValueError("available_in_states cannot be empty")
 
