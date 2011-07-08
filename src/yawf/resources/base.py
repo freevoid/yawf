@@ -10,7 +10,7 @@ class WorkflowResource(object):
         self._handler = handler
         self.id = resource_id
         self.checkers = permission_checkers
-        self.permission_checker = AndChecker(permission_checkers)
+        self.permission_checker = AndChecker(*permission_checkers)
         self.description = description
 
     def __call__(self, request, obj, sender):
