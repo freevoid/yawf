@@ -70,6 +70,7 @@ class WorkflowBase(object):
             ('_actions', dict),
             ('_actions_any_destination', dict),
             ('_actions_any_startpoint', dict),
+            ('_actions_for_possible', dict),
             ('_valid_states', set),
             ('_message_specs', dict),
             ('_message_checkers_by_state', dict))
@@ -219,6 +220,14 @@ class WorkflowBase(object):
 
         return None
 
+    def get_possible_actions(self, from_state, message_id):
+        first_try = self._actions_for_possible.get((from_state, message_id))
+        if first_try:
+            return first_try
+
+        last_try = self._actions_for_possible.get((None, message_id))
+        return last_try or []
+
     def get_message_specs(self):
         return self._message_specs
 
@@ -230,7 +239,8 @@ class WorkflowBase(object):
 
     def register_resource(self, resource_id=None, description=None,
             available_in_states=None,
-            permission_checker=None):
+            permission_checker=None,
+            slug=None):
 
         if permission_checker is None:
             permission_checker = (self.default_permission_checker,)
@@ -253,7 +263,8 @@ class WorkflowBase(object):
 
             resource = WorkflowResource(handler, resource_id=resource_id,
                     description=description,
-                    permission_checkers=permission_checkers)
+                    permission_checkers=permission_checkers,
+                    slug=slug)
 
             self._resources[resource_id] = resource
 
@@ -335,16 +346,22 @@ class WorkflowBase(object):
                 for state_from in states_from:
                     key = (state_from, message_id)
                     self._actions_any_destination[key] = action
+                    tmp = self._actions_for_possible.setdefault(key, [])
+                    tmp.append(action)
             else:
                 if states_from is None:
                     for state_to in states_to:
                         key = (state_to, message_id)
                         self._actions_any_startpoint[key] = action
+                    tmp = self._actions_for_possible.setdefault((None, message_id), [])
+                    tmp.append(action)
                 else:
                     for state_to in states_to:
                         for state_from in states_from:
                             key = (state_from, state_to, message_id)
                             self._actions[key] = action
+                            tmp = self._actions_for_possible.setdefault((state_from, message_id), [])
+                            tmp.append(action)
             return action
 
         return registrator
