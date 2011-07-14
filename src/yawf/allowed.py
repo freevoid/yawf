@@ -18,7 +18,11 @@ def get_allowed(sender, obj):
     for resource in workflow.get_available_resources(obj.state):
         if any(check_result.get(i) for i in resource.checkers):
             resources.append(
-                {'id': resource.id, 'description': resource.description})
+                {
+                    'id': resource.id,
+                    'description': resource.description,
+                    'slug': resource.slug,
+                })
 
     return {'allowed_messages': messages,
             'allowed_resources': resources}

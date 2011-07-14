@@ -5,13 +5,15 @@ from yawf.permissions import AndChecker
 class WorkflowResource(object):
 
     def __init__(self, handler, resource_id, permission_checkers,
-                                                description=None):
+                                                description=None,
+                                                slug=None):
         super(WorkflowResource, self).__init__()
         self._handler = handler
         self.id = resource_id
         self.checkers = permission_checkers
         self.permission_checker = AndChecker(*permission_checkers)
         self.description = description
+        self.slug = slug or self.id
 
     def __call__(self, request, obj, sender):
 
