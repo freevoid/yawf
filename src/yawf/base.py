@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import collections
+from types import ClassType
 
 from django.utils.datastructures import MergeDict
 
 from yawf import config
 from yawf import permissions
+from yawf.actions import SideEffectAction
 from yawf.resources import WorkflowResource
 from yawf.exceptions import UnhandledMessageError, IllegalStateError,\
          MessageSpecNotRegisteredError
@@ -333,35 +335,49 @@ class WorkflowBase(object):
 
         return registrator
 
-    def register_action(self, message_id=None, states_from=None, states_to=None):
-        if states_from is None and states_to is None:
-            raise ValueError("Must specify at least one of states_from "
-                                                            "or states_to.")
+    def register_action_obj(self, action_obj):
+        message_id = action_obj.message_id
+        states_to, states_from = action_obj.states_to, action_obj.states_from
 
-        def registrator(action, message_id=message_id):
-            if message_id is None:
-                message_id = action.__name__
-
-            if states_to is None:
-                for state_from in states_from:
-                    key = (state_from, message_id)
-                    self._actions_any_destination[key] = action
-                    tmp = self._actions_for_possible.setdefault(key, [])
-                    tmp.append(action)
+        if states_to is None:
+            for state_from in states_from:
+                key = (state_from, message_id)
+                self._actions_any_destination[key] = action_obj
+                tmp = self._actions_for_possible.setdefault(key, [])
+                tmp.append(action_obj)
+        else:
+            if states_from is None:
+                for state_to in states_to:
+                    key = (state_to, message_id)
+                    self._actions_any_startpoint[key] = action_obj
+                tmp = self._actions_for_possible.setdefault((None, message_id), [])
+                tmp.append(action_obj)
             else:
-                if states_from is None:
-                    for state_to in states_to:
-                        key = (state_to, message_id)
-                        self._actions_any_startpoint[key] = action
-                    tmp = self._actions_for_possible.setdefault((None, message_id), [])
-                    tmp.append(action)
-                else:
-                    for state_to in states_to:
-                        for state_from in states_from:
-                            key = (state_from, state_to, message_id)
-                            self._actions[key] = action
-                            tmp = self._actions_for_possible.setdefault((state_from, message_id), [])
-                            tmp.append(action)
+                for state_to in states_to:
+                    for state_from in states_from:
+                        key = (state_from, state_to, message_id)
+                        self._actions[key] = action_obj
+                        tmp = self._actions_for_possible.setdefault((state_from, message_id), [])
+                        tmp.append(action_obj)
+
+    def register_action(self, message_id=None, states_from=None, states_to=None):
+
+        if not isinstance(message_id, basestring) and issubclass(message_id, SideEffectAction):
+            self.register_action_obj(message_id())
+            return message_id
+
+        action_obj = SideEffectAction(
+            message_id=message_id,
+            states_from=states_from,
+            states_to=states_to)
+
+        def registrator(action):
+
+            if action_obj.message_id is None:
+                action_obj.message_id = action.__name__
+
+            action_obj.set_performer(action)
+            self.register_action_obj(action_obj)
             return action
 
         return registrator
