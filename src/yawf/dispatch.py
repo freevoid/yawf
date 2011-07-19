@@ -83,8 +83,12 @@ def perform_side_effect(old_obj, new_obj,
     action = workflow.get_action(
             old_obj.state, new_obj.state, message.id)
     if callable(action):
-        return action(old_obj, new_obj, message.sender,
-                                                    **message.params)
+        return action(
+            old_obj=old_obj,
+            obj=new_obj,
+            sender=message.sender,
+            params=message.params
+        )
     else:
         logger.warning(u"Action undefined: object id %s, state %s -> %s",
                 new_obj.id, old_obj.state, new_obj.state)
