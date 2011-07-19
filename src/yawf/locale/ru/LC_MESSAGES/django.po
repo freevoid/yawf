@@ -20,7 +20,7 @@ msgstr ""
 
 #: models.py:15
 msgid "state"
-msgstr "состояник"
+msgstr "состояние"
 
 #: messages/common.py:9
 msgid "delete"
