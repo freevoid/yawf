@@ -1,6 +1,6 @@
 import os
 
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, findall
 
 PACKAGE_ROOT = 'src'
 PACKAGE_NAME = 'yawf'
@@ -10,11 +10,17 @@ execfile(os.path.join(PACKAGE_ROOT, PACKAGE_NAME, 'version.py'))
 
 root_dir = os.path.abspath(os.path.dirname(__file__))
 
+data_files = filter(
+    lambda name: not name.endswith('.py') and not name.endswith('.pyc'),
+    findall('src/yawf'))
+data_files = [x.split(os.sep, 2)[-1] for x in data_files]
+
 setup(
     name = PACKAGE_NAME,
     version = __version__,
     package_dir = {'': PACKAGE_ROOT},
     packages = find_packages(PACKAGE_ROOT),
+    package_data = {'': data_files},
 
     # Metadata
     author = "Nikolay Zakharov",
