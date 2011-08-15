@@ -48,6 +48,15 @@ def common_cancel(obj):
     obj.save()
 
 
+def make_common_start(state):
+
+    def common_start(obj):
+        obj.state = state
+        obj.is_hidden = False
+        obj.save()
+    return common_start
+
+
 def optionally_edit(handler):
 
     @wraps(handler)

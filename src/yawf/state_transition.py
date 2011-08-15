@@ -12,41 +12,34 @@ from yawf.exceptions import OldStateInconsistenceError,\
 logger = logging.getLogger(__name__)
 
 
-@transaction.commit_manually
+@transaction.commit_on_success
 def transactional_transition(workflow, obj, message, state_transition):
+    old_revision = getattr(obj, REVISION_ATTR, None)
+    old_state = obj.state
+    obj_id = obj.id
+    old_obj = obj
+    obj = select_for_update(workflow.model_class.objects.filter(id=obj_id))[0]
+    new_revision = getattr(obj, REVISION_ATTR, None)
+    if old_revision is not None and new_revision != old_revision:
+        raise ConcurrentRevisionUpdate(workflow.id, obj_id, obj.state)
 
-    try:
-        old_revision = getattr(obj, REVISION_ATTR, None)
-        old_state = obj.state
-        obj_id = obj.id
-        old_obj = obj
-        obj = select_for_update(workflow.model_class.objects.filter(id=obj_id))[0]
-        new_revision = getattr(obj, REVISION_ATTR, None)
-        if old_revision is not None and new_revision != old_revision:
-            raise ConcurrentRevisionUpdate(workflow.id, obj_id, obj.state)
+    if obj.state != old_state:
+        raise OldStateInconsistenceError(obj_id,
+                old_state, obj.state)
+    # all ok, perform db changes as transaction
+    clarified = obj.get_clarified_instance() or obj
 
-        if obj.state != old_state:
-            raise OldStateInconsistenceError(obj_id,
-                    old_state, obj.state)
-        # all ok, perform db changes as transaction
-        clarified = obj.get_clarified_instance() or obj
+    # do db changes
+    state_transition(clarified)
 
-        # do db changes
-        state_transition(clarified)
+    # perform side effect action defined for transition
+    perform_side_effect(old_obj, obj,
+            message=message,
+            workflow=workflow)
 
-        # perform side effect action defined for transition
-        perform_side_effect(old_obj, obj,
-                message=message,
-                workflow=workflow)
-    except:
-        transaction.rollback()
-        raise
-    else:
-
-        transaction.commit()
-        logger.info("Performed state transition of object %d: %s -> %s",
-                obj_id, old_state, clarified.state)
-        return clarified
+    logger.info("Performed state transition of object %d: %s -> %s",
+            obj_id, old_state, clarified.state)
+    return clarified
 
 
 def perform_side_effect(old_obj, new_obj,
