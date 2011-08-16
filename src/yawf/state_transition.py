@@ -33,13 +33,13 @@ def transactional_transition(workflow, obj, message, state_transition):
     state_transition(clarified)
 
     # perform side effect action defined for transition
-    perform_side_effect(old_obj, obj,
+    side_effect_result = perform_side_effect(old_obj, obj,
             message=message,
             workflow=workflow)
 
     logger.info("Performed state transition of object %d: %s -> %s",
             obj_id, old_state, clarified.state)
-    return clarified
+    return clarified, side_effect_result
 
 
 def perform_side_effect(old_obj, new_obj,

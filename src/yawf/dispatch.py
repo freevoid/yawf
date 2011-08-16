@@ -57,7 +57,8 @@ def dispatch_message(obj, message):
         raise WrongHandlerResultError(handler_result)
 
 
-    new_obj = transactional_transition(workflow, obj, message, state_transition)
+    new_obj, side_effect_result =\
+        transactional_transition(workflow, obj, message, state_transition)
 
     message_handled.send(
             sender=workflow.id,
@@ -65,4 +66,4 @@ def dispatch_message(obj, message):
             instance=obj,
             new_revision=new_obj.revision)
 
-    return new_obj
+    return new_obj, side_effect_result
