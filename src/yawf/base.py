@@ -72,6 +72,7 @@ class WorkflowBase(object):
             ('_actions', dict),
             ('_actions_any_destination', dict),
             ('_actions_any_startpoint', dict),
+            ('_actions_any_states', dict),
             ('_actions_for_possible', dict),
             ('_valid_states', set),
             ('_message_specs', dict),
@@ -208,6 +209,7 @@ class WorkflowBase(object):
         return self._join_checkers(permission_checkers), handler
 
     def get_action(self, from_state, to_state, message_id):
+        # TODO: refactor
         first_try = self._actions.get((from_state, to_state, message_id))
         if callable(first_try):
             return first_try
@@ -216,7 +218,11 @@ class WorkflowBase(object):
         if callable(second_try):
             return second_try
 
-        last_try = self._actions_any_destination.get((from_state, message_id))
+        pre_last_try = self._actions_any_destination.get((from_state, message_id))
+        if callable(pre_last_try):
+            return pre_last_try
+
+        last_try = self._actions_any_states.get(message_id)
         if callable(last_try):
             return last_try
 
@@ -340,9 +346,15 @@ class WorkflowBase(object):
         states_to, states_from = action_obj.states_to, action_obj.states_from
 
         if states_to is None:
-            for state_from in states_from:
-                key = (state_from, message_id)
-                self._actions_any_destination[key] = action_obj
+            if states_from is not None:
+                for state_from in states_from:
+                    key = (state_from, message_id)
+                    self._actions_any_destination[key] = action_obj
+                    tmp = self._actions_for_possible.setdefault(key, [])
+                    tmp.append(action_obj)
+            else:
+                key = message_id
+                self._actions_any_states[key] = action_obj
                 tmp = self._actions_for_possible.setdefault(key, [])
                 tmp.append(action_obj)
         else:
