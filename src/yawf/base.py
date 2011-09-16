@@ -82,6 +82,7 @@ class WorkflowBase(object):
             ('_valid_states', set),
             ('_message_specs', dict),
             ('_message_groups', dict),
+            ('_deferred', list),
             ('_message_checkers_by_state', dict))
 
     def __init__(self, inherit_behaviour=False, id=None):
@@ -120,6 +121,10 @@ class WorkflowBase(object):
     def _is_grouped_message_id(self, message_id):
         return self.message_id_grouper in message_id
 
+    def _clean_deferred_chain(self):
+        for df in self._deferred:
+            df()
+        self._deferred = []
 
     def is_valid_state(self, state):
         return state in self._valid_states
@@ -215,6 +220,8 @@ class WorkflowBase(object):
         If current state is illegal for this type of message, raises
         IllegalStateError(current_state).
         '''
+        self._clean_deferred_chain()
+
         lookup_result = self._handlers.get(state)
         if lookup_result is None:
             raise IllegalStateError(state)
@@ -353,7 +360,8 @@ class WorkflowBase(object):
 
     def register_handler(self, message_id=None, states_from=None,
             permission_checker=None, message_group=None,
-            replace_if_exists=False):
+            replace_if_exists=False,
+            defer=True):
         '''
         Returns decorator to register handler for message_id when fsm in
         one of the states in states_from and sender passed permission_checker.
@@ -412,7 +420,12 @@ class WorkflowBase(object):
                 checkers_set.update(permission_checkers)
             return handler
 
-        return registrator
+        if defer:
+            def defered_registrator(handler):
+                self._deferred.append(lambda: registrator(handler))
+            return defered_registrator
+        else:
+            return registrator
 
     def register_action_obj(self, action_obj):
         message_id = action_obj.message_id
@@ -472,4 +485,3 @@ class WorkflowBase(object):
 
     def post_create_hook(self, sender, cleaned_data, instance):
         pass
-
