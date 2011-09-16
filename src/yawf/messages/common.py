@@ -3,11 +3,15 @@ from django.utils.translation import ugettext_lazy as _
 from yawf.messages.spec import MessageSpec
 
 
-class BasicCancelMessage(MessageSpec):
+def message_spec_fabric(id, verb=None, rank=0, **attrs):
+    return type('Spec', (MessageSpec,), locals())
 
-    id = 'cancel'
-    verb = _('delete')
-    rank = 1000
+
+BasicCancelMessage = message_spec_fabric(
+    id='cancel',
+    verb=_('delete'),
+    rank=1000,
+)
 
 
 class BasicEditMessage(MessageSpec):
@@ -21,19 +25,19 @@ class BasicEditMessage(MessageSpec):
         return {'edit_fields': params}
 
 
-class BasicStartMessage(MessageSpec):
-
-    id = 'start_workflow'
-    verb = _('create')
-
-
-class BasicPassedMessage(MessageSpec):
-
-    id = 'passed'
-    verb = _('mark passed')
+BasicStartMessage = message_spec_fabric(
+    id='start_workflow',
+    verb=_('create'),
+)
 
 
-class BasicCameMessage(MessageSpec):
+BasicPassedMessage = message_spec_fabric(
+    id='passed',
+    verb=_('mark passed'),
+)
 
-    id = 'came'
-    verb = _('mark came')
+
+BasicCameMessage = message_spec_fabric(
+    id='came',
+    verb=_('mark came'),
+)
