@@ -2,10 +2,14 @@ from django.conf import settings
 
 DEFAULT_CONFIG = {
     'WORKFLOW_TYPE_ATTR': 'workflow_type',
-    'REVISION_ATTR': 'revision',
     'INITIAL_STATE': 'init',
     'STATE_TYPE_CONSTRAINT': basestring,
     'DEFAULT_START_MESSAGE': 'start_workflow',
+    'SOFT_DELETE_ATTR': None,
+    'REVISION_ATTR': 'revision',
+    'REVISION_ENABLED': False,
+    'REVISION_CONTROLLED_MODELS': (),
+    'MESSAGE_LOG_ENABLED': False,
 }
 
 CONFIG = DEFAULT_CONFIG.copy()
