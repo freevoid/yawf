@@ -56,6 +56,10 @@ class MessageSpecNotRegisteredError(YawfException):
     pass
 
 
+class GroupPathEmptyError(YawfException):
+    pass
+
+
 class MessageIgnored(YawfException):
 
     @property
@@ -73,4 +77,3 @@ class ResourceNotFoundError(YawfException):
 
 class ConcurrentRevisionUpdate(YawfException):
     pass
-
