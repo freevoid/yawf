@@ -49,7 +49,6 @@ class WorkflowBase(object):
     '''
 
     rank = 0
-    color = '#735184'
     valid_states = [INITIAL_STATE]
     extra_valid_states = ()
     default_permission_checker = staticmethod(permissions.allow_to_all)
@@ -59,9 +58,9 @@ class WorkflowBase(object):
     verbose_type_names = {}
     verbose_state_names = {}
 
-    exportable_fields = ('rank', 'color', 'verbose_name',)
+    exportable_fields = ('rank', 'verbose_name',)
     # message id or callable that returns message context to start workflow
-    start_workflow = 'start_workflow'
+    start_workflow = DEFAULT_START_MESSAGE
 
     _containers = (
             ('_handlers', dict),
