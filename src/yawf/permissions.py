@@ -30,7 +30,8 @@ class BasePermissionChecker(object):
         else:
             cache_result = cache.get(checker, None)
             return (cache_result
-                if cache_result is not None else checker(obj, sender))
+                if cache_result is not None
+                else checker(obj, sender))
 
     def add_checker(self, checker):
         self._checkers.append(checker)
