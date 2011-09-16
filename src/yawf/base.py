@@ -3,15 +3,13 @@ import collections
 
 from django.utils.datastructures import MergeDict
 
-from yawf import config
+from yawf.config import INITIAL_STATE, DEFAULT_START_MESSAGE
 from yawf import permissions
 from yawf.actions import SideEffectAction
 from yawf.resources import WorkflowResource
 from yawf.exceptions import UnhandledMessageError, IllegalStateError,\
          MessageSpecNotRegisteredError
 
-
-INITIAL_STATE = config.CONFIG['INITIAL_STATE']
 from yawf.messages.spec import MessageSpec
 from yawf.permissions import OrChecker
 
