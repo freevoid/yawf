@@ -1,11 +1,11 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from yawf import get_workflow_by_instance
-from yawf.config import INITIAL_STATE
+from yawf.config import INITIAL_STATE, REVISION_ENABLED, MESSAGE_LOG_ENABLED
+from yawf.base_model import WorkflowAwareModelBase
 
 
-class WorkflowAwareModel(models.Model):
+class WorkflowAwareModel(WorkflowAwareModelBase):
 
     class Meta:
         abstract = True
@@ -14,22 +14,13 @@ class WorkflowAwareModel(models.Model):
             max_length=32, db_index=True, editable=False,
             verbose_name=_('state'))
 
-    @property
-    def workflow(self):
-        if not self._workflow:
-            self._workflow = get_workflow_by_instance(self)
-        return self._workflow
 
-    def workflow_type_display(self):
-        return self.workflow.verbose_name
+if REVISION_ENABLED:
+    from .revision import Revision, setup_handlers
+    models.register_models('yawf', Revision)
 
-    def state_display(self):
-        return self.workflow.verbose_state_names.get(self.state) or self.state
+    if MESSAGE_LOG_ENABLED:
+        from .message_log import MessageLog
+        models.register_models('yawf', MessageLog)
 
-    def get_clarified_instance(self):
-        workflow = self.workflow
-
-        if workflow.model_class is self.__class__:
-            return self
-        else:
-            return workflow.model_class.objects.get(id=self.id)
+    setup_handlers()
