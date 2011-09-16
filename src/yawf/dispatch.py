@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from yawf.config import STATE_TYPE_CONSTRAINT
+from yawf.config import STATE_TYPE_CONSTRAINT, REVISION_ATTR
 from yawf.exceptions import IllegalStateError,\
          WrongHandlerResultError, PermissionDeniedError,\
          MessageIgnored
@@ -28,8 +28,9 @@ def dispatch_message(obj, message):
     # validate data and filter out trash
     message = clean_message_data(workflow, obj, message)
 
-    permission_checker, handler = workflow.get_handler(obj.state,
-                                                                message.id)
+    current_state = getattr(obj, workflow.state_attr_name)
+    permission_checker, handler = workflow.get_handler(current_state,
+                                                        message.id)
 
     # check permission for a sender
     if not permission_checker(obj, message.sender):
@@ -45,7 +46,7 @@ def dispatch_message(obj, message):
     if isinstance(handler_result, STATE_TYPE_CONSTRAINT):
         if workflow.is_valid_state(handler_result):
             def state_transition(clarified):
-                clarified.state = handler_result
+                setattr(clarified, workflow.state_attr_name, handler_result)
                 clarified.save()
                 return clarified
         else:
@@ -56,14 +57,16 @@ def dispatch_message(obj, message):
     else:
         raise WrongHandlerResultError(handler_result)
 
-
-    new_obj, side_effect_result =\
+    new_obj, transition_result, side_effect_result =\
         transactional_transition(workflow, obj, message, state_transition)
+
+    new_revision = getattr(new_obj, REVISION_ATTR, None)
 
     message_handled.send(
             sender=workflow.id,
             message=message,
             instance=obj,
-            new_revision=new_obj.revision)
+            transition_result=transition_result,
+            new_revision=new_revision)
 
     return new_obj, side_effect_result
