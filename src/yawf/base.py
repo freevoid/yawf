@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import collections
+from operator import attrgetter
 
 from django.utils.datastructures import MergeDict
 
@@ -8,9 +9,12 @@ from yawf.config import INITIAL_STATE, DEFAULT_START_MESSAGE
 from yawf import permissions
 from yawf.actions import SideEffectAction
 from yawf.resources import WorkflowResource
-from yawf.exceptions import UnhandledMessageError, IllegalStateError,\
-         MessageSpecNotRegisteredError
-
+from yawf.exceptions import (
+    UnhandledMessageError,
+    IllegalStateError,
+    MessageSpecNotRegisteredError,
+    GroupPathEmptyError,
+)
 from yawf.messages.spec import MessageSpec
 from yawf.permissions import OrChecker
 
@@ -61,6 +65,7 @@ class WorkflowBase(object):
     state_attr_name = 'state'
 
     exportable_fields = ('rank', 'verbose_name',)
+    message_id_grouper = '__'
     # message id or callable that returns message context to start workflow
     start_workflow = DEFAULT_START_MESSAGE
 
@@ -76,6 +81,7 @@ class WorkflowBase(object):
             ('_actions_for_possible', dict),
             ('_valid_states', set),
             ('_message_specs', dict),
+            ('_message_groups', dict),
             ('_message_checkers_by_state', dict))
 
     def __init__(self, inherit_behaviour=False, id=None):
@@ -111,6 +117,9 @@ class WorkflowBase(object):
         cls._valid_states = set(cls.valid_states)
         cls._valid_states.update(cls.extra_valid_states)
 
+    def _is_grouped_message_id(self, message_id):
+        return self.message_id_grouper in message_id
+
 
     def is_valid_state(self, state):
         return state in self._valid_states
@@ -123,6 +132,20 @@ class WorkflowBase(object):
             return False
 
         return message_id in lookup_result
+
+    def message_id_from_grouped(self, group_path):
+        return self.message_id_grouper.join(group_path)
+
+    def split_grouped_message_id(self, message_id):
+        return message_id.split(self.message_id_grouper)
+
+    def get_message_ids_by_path(self, group_path):
+        cur_level = self._message_groups
+        for group_id in group_path:
+            cur_level = cur_level.get(group_id, None)
+            if not cur_level:
+                raise GroupPathEmptyError(group_path)
+        return map(attrgetter('id'), cur_level.itervalues())
 
     def get_verbose_type(self, state):
         return self.verbose_type_names.get(state)
@@ -300,10 +323,32 @@ class WorkflowBase(object):
         return registrator
 
     def register_message(self, message_spec):
+
+        # register in flat registry
+
         if message_spec.id in self._message_specs:
             raise ValueError("Message spec already registered for message '%s'" %
                     (message_spec.id,))
         self._message_specs[message_spec.id] = message_spec
+
+        # handle message grouping
+
+        if self._is_grouped_message_id(message_spec.id):
+            splitted_id = self.split_grouped_message_id(message_spec.id)
+            group_path, final_id = splitted_id[:-1], splitted_id[-1]
+
+            group_dict = self._message_groups
+
+            for group in group_path:
+                group_dict = group_dict.setdefault(
+                    group, {})
+
+            if final_id in group_dict:
+                raise ValueError("Message spec already registered for message '%s' in group '%s'" %
+                    (final_id, group_path))
+
+            group_dict[final_id] = message_spec
+
         return message_spec
 
     def register_handler(self, message_id=None, states_from=None,
