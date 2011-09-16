@@ -352,7 +352,8 @@ class WorkflowBase(object):
         return message_spec
 
     def register_handler(self, message_id=None, states_from=None,
-            permission_checker=None):
+            permission_checker=None, message_group=None,
+            replace_if_exists=False):
         '''
         Returns decorator to register handler for message_id when fsm in
         one of the states in states_from and sender passed permission_checker.
@@ -381,13 +382,30 @@ class WorkflowBase(object):
             states_from = self.valid_states
 
         def registrator(handler, message_id=message_id):
+            if message_group is not None:
+                if isinstance(message_group, basestring):
+                    group_path = [message_group]
+                else:
+                    assert isinstance(message_group, collections.Iterable)
+                    group_path = message_group
+                message_id_list = self.get_message_ids_by_path(group_path)
+            else:
+                message_id_list = []
+
             if message_id is None:
-                message_id = handler.__name__
+                message_id_list.append(handler.__name__)
+            else:
+                message_id_list.append(message_id)
 
             for state in states_from:
                 # add handler to lookup table by (state, message_id)
                 handlers = self._handlers.setdefault(state, {})
-                handlers[message_id] = (permission_checkers, handler)
+                for message_id in message_id_list:
+                    if message_id in handlers and not replace_if_exists:
+                        raise ValueError(
+                            "Handler for state %s, message %s already registered"
+                                % (state, message_id))
+                    handlers[message_id] = (permission_checkers, handler)
 
                 # add checker to checkers_by_state index
                 checkers_set = self._message_checkers_by_state.setdefault(state, set())
