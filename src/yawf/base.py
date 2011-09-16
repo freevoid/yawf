@@ -57,6 +57,7 @@ class WorkflowBase(object):
     verbose_name = None
     verbose_type_names = {}
     verbose_state_names = {}
+    state_attr_name = 'state'
 
     exportable_fields = ('rank', 'verbose_name',)
     # message id or callable that returns message context to start workflow
