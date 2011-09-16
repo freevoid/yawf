@@ -9,6 +9,10 @@ class WorkflowNotLoadedError(YawfException):
     pass
 
 
+class WorkflowAlreadyRegisteredError(YawfException):
+    pass
+
+
 class OldStateInconsistenceError(YawfException):
     pass
 
@@ -69,3 +73,4 @@ class ResourceNotFoundError(YawfException):
 
 class ConcurrentRevisionUpdate(YawfException):
     pass
+
