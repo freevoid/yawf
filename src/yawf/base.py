@@ -289,6 +289,19 @@ class WorkflowBase(object):
 
         return registrator
 
+    def register_message_by_form(self, message_id, base_spec=MessageSpec):
+
+        def registrator(message_validator):
+
+            class Spec(base_spec):
+                id = message_id
+                validator_cls = message_validator
+
+            self.register_message(Spec)
+            return message_validator
+
+        return registrator
+
     def register_message(self, message_spec):
         if message_spec.id in self._message_specs:
             raise ValueError("Message spec already registered for message '%s'" %
@@ -399,3 +412,4 @@ class WorkflowBase(object):
 
     def post_create_hook(self, sender, cleaned_data, instance):
         pass
+
