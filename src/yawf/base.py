@@ -3,6 +3,7 @@ import collections
 
 from django.utils.datastructures import MergeDict
 
+from yawf import _register_workflow
 from yawf.config import INITIAL_STATE, DEFAULT_START_MESSAGE
 from yawf import permissions
 from yawf.actions import SideEffectAction
@@ -77,15 +78,19 @@ class WorkflowBase(object):
             ('_message_specs', dict),
             ('_message_checkers_by_state', dict))
 
-    def __init__(self, inherit_behaviour=False):
+    def __init__(self, inherit_behaviour=False, id=None):
 
         if not inherit_behaviour:
             self.init_containers()
         else:
             self.init_inherited_containers()
 
+        if id is not None:
+            self.id = id
+
         self.inherit_behaviour = inherit_behaviour
         super(WorkflowBase, self).__init__()
+        _register_workflow(self)
 
 
     def init_inherited_containers(self):
