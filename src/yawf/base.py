@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import collections
-from types import ClassType
 
 from django.utils.datastructures import MergeDict
 
@@ -13,6 +12,8 @@ from yawf.exceptions import UnhandledMessageError, IllegalStateError,\
 
 
 INITIAL_STATE = config.CONFIG['INITIAL_STATE']
+from yawf.messages.spec import MessageSpec
+from yawf.permissions import OrChecker
 
 
 def merge_container(container_name, container_fabric, parent_container):
@@ -107,13 +108,6 @@ class WorkflowBase(object):
         cls._valid_states = set(cls.valid_states)
         cls._valid_states.update(cls.extra_valid_states)
 
-    @staticmethod
-    def _join_checkers(permission_checkers):
-        '''
-        Join all permission checkers in single function.
-        '''
-        return (lambda obj, sender:
-            any(p(obj, sender) for p in permission_checkers))
 
     def is_valid_state(self, state):
         return state in self._valid_states
@@ -206,7 +200,7 @@ class WorkflowBase(object):
 
         permission_checkers, handler = complex_handler
 
-        return self._join_checkers(permission_checkers), handler
+        return OrChecker(*permission_checkers), handler
 
     def get_action(self, from_state, to_state, message_id):
         # TODO: refactor
