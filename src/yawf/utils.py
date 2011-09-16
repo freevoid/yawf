@@ -1,4 +1,4 @@
-from functools import wraps
+from functools import wraps, partial
 
 from yawf.config import STATE_TYPE_CONSTRAINT
 from yawf import get_workflow_by_instance
@@ -15,6 +15,7 @@ def make_common_updater(kwargs, field_names=None):
 
     # to ensure that we will update, not insert new
     kwargs.pop('id', None)
+    kwargs.pop('pk', None)
 
     if field_names:
         def common_updater(obj):
@@ -42,19 +43,30 @@ def make_common_updater(kwargs, field_names=None):
     return common_updater
 
 
-def common_cancel(obj):
+def common_cancel(obj, soft_delete_attr=None):
     obj.state = 'canceled'
-    obj.is_hidden = True
+    if soft_delete_attr:
+        setattr(obj, soft_delete_attr, True)
     obj.save()
 
 
-def make_common_start(state):
+def common_start(obj, state, soft_delete_attr=None):
+    obj.state = state
+    if soft_delete_attr:
+        setattr(obj, soft_delete_attr, False)
+    obj.save()
 
-    def common_start(obj):
-        obj.state = state
-        obj.is_hidden = False
-        obj.save()
-    return common_start
+
+def make_common_cancel(soft_delete_attr=None):
+
+    return partial(common_cancel,
+        soft_delete_attr=soft_delete_attr)
+
+
+def make_common_start(state, soft_delete_attr=None):
+
+    return partial(common_start,
+        state=state, soft_delete_attr=soft_delete_attr)
 
 
 def optionally_edit(handler):
