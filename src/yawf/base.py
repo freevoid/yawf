@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import collections
 from operator import attrgetter
+import warnings
 
 from django.utils.datastructures import MergeDict
 
@@ -23,7 +24,6 @@ def merge_container(container_name, container_fabric, parent_container):
 
     # XXX: need to test before extensive use
 
-
     if issubclass(container_fabric, dict):
         basic_container = container_fabric()
         if container_name == '_message_specs':
@@ -37,6 +37,20 @@ def merge_container(container_name, container_fabric, parent_container):
         return container
     else:
         return parent_container
+
+
+class WorkflowMeta(type):
+
+    def __new__(cls, name, bases, attrs):
+        if ('extra_valid_states' in attrs and
+                (len(bases) != 1 or (bases[0] is not object))):
+            # warn about using extra_valid_states in derived classes
+            attrs['states'] = attrs['extra_valid_states']
+            attrs.pop('extra_valid_states')
+            warnings.warn(
+                'Use of extra_valid_states is DEPRECATED. Change your code to use states instead.',
+                DeprecationWarning)
+        return super(WorkflowMeta, cls).__new__(cls, name, bases, attrs)
 
 
 class WorkflowBase(object):
@@ -53,9 +67,11 @@ class WorkflowBase(object):
     workflow context.
     '''
 
+    __metaclass__ = WorkflowMeta
+
     rank = 0
-    valid_states = [INITIAL_STATE]
-    extra_valid_states = ()
+    initial_state = INITIAL_STATE
+    states = ()
     default_permission_checker = staticmethod(permissions.allow_to_all)
     create_form_cls = None
     create_form_template = None
@@ -79,11 +95,17 @@ class WorkflowBase(object):
             ('_actions_any_startpoint', dict),
             ('_actions_any_states', dict),
             ('_actions_for_possible', dict),
-            ('_valid_states', set),
             ('_message_specs', dict),
             ('_message_groups', dict),
             ('_deferred', list),
             ('_message_checkers_by_state', dict))
+
+    @property
+    def extra_valid_states(self):
+        warnings.warn(
+            'Use of extra_valid_states is DEPRECATED. Change your code to use states instead.',
+            DeprecationWarning)
+        return self.states
 
     def __init__(self, inherit_behaviour=False, id=None):
 
@@ -91,6 +113,9 @@ class WorkflowBase(object):
             self.init_containers()
         else:
             self.init_inherited_containers()
+
+        self.states = set(self.states)
+        self._valid_states = self.states.union([self.initial_state])
 
         if id is not None:
             self.id = id
@@ -107,16 +132,10 @@ class WorkflowBase(object):
             setattr(self, container_name,
                     merge_container(container_name, container_fabric, getattr(cls, container_name)))
 
-        self._valid_states = set(cls._valid_states)
-        self._valid_states.update(self.extra_valid_states)
-
     @classmethod
     def init_containers(cls):
         for container_name, container_fabric in cls._containers:
             setattr(cls, container_name, container_fabric())
-
-        cls._valid_states = set(cls.valid_states)
-        cls._valid_states.update(cls.extra_valid_states)
 
     def _is_grouped_message_id(self, message_id):
         return self.message_id_grouper in message_id
@@ -390,7 +409,8 @@ class WorkflowBase(object):
             permission_checkers = permission_checker
 
         if states_from is None:
-            states_from = self.valid_states
+            # defaulting states_from to any extra state
+            states_from = self.states
 
         def registrator(handler, message_id=message_id):
             if message_group is not None:
