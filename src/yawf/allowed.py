@@ -12,7 +12,7 @@ def get_allowed(sender, obj):
     for checkers, message in workflow.get_available_messages(obj.state):
         if any(check_result.get(i) for i in checkers):
             spec = workflow.get_message_spec(message)
-            messages.append({'id': spec.id, 'title': spec.verb, 'rank': spec.rank})
+            messages.append({'id': spec.id, 'title': unicode(spec), 'rank': spec.rank})
 
     resources = []
     for resource in workflow.get_available_resources(obj.state):
