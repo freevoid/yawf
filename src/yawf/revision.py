@@ -1,34 +1,12 @@
 import warnings
 
 from django.db import models
-from django.db.models.fields import FieldDoesNotExist
-from django.core import serializers
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
-from django.utils import simplejson as json
 
 from yawf.config import REVISION_ATTR, REVISION_CONTROLLED_MODELS, MESSAGE_LOG_ENABLED
 from yawf.base_model import WorkflowAwareModelBase
-
-
-def serialize(instance):
-    serializer = serializers.get_serializer("json")()
-    serializer.serialize([instance], ensure_ascii=False)
-    return serializer.getvalue()
-
-
-def deserialize_to_dict(content):
-    item = json.loads(content)[0]
-    return item['fields']
-
-
-def deserialize(content):
-    try:
-        deserialized = serializers.deserialize("json", content).next()
-    except FieldDoesNotExist:
-        deserialize_to_dict(content)
-    else:
-        return deserialized
+from yawf.serialize_utils import serialize, deserialize
 
 
 class Revision(models.Model):
