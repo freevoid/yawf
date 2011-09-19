@@ -3,7 +3,8 @@ from collections import Iterable
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
-from django.utils import simplejson as json
+
+from yawf import serialize_utils as json
 
 from yawf.revision import Revision
 from yawf.config import MESSAGE_LOG_ENABLED
