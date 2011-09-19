@@ -338,15 +338,22 @@ class WorkflowBase(object):
 
         return registrator
 
-    def register_message_by_form(self, message_id, base_spec=MessageSpec):
+    def register_message_by_form(self, message_id=None, message_id_list=None, base_spec=MessageSpec):
+
+        if message_id is None:
+            if message_id_list is None:
+                raise ValueError("You must specify either message_id or message_id_list")
+        else:
+            message_id_list = [message_id]
 
         def registrator(message_validator):
 
-            class Spec(base_spec):
-                id = message_id
-                validator_cls = message_validator
+            for message_id in message_id_list:
+                class Spec(base_spec):
+                    id = message_id
+                    validator_cls = message_validator
 
-            self.register_message(Spec)
+                self.register_message(Spec)
             return message_validator
 
         return registrator
