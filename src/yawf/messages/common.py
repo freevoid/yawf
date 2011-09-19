@@ -1,16 +1,22 @@
 from django.utils.translation import ugettext_lazy as _
 
-from yawf.messages.spec import MessageSpec
+from yawf.messages.spec import MessageSpec, MessageSpecMeta
 
 
 def message_spec_fabric(id, verb=None, rank=0, **attrs):
-    return type('Spec', (MessageSpec,), locals())
+    return MessageSpecMeta('Spec', (MessageSpec,), locals())
 
 
 BasicCancelMessage = message_spec_fabric(
     id='cancel',
     verb=_('delete'),
     rank=1000,
+)
+
+BasicDeleteMessage = message_spec_fabric(
+    id='delete',
+    verb=_('delete'),
+    rank=1001,
 )
 
 
