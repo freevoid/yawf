@@ -130,6 +130,7 @@ class WorkflowBase(object):
         return state in self._valid_states
 
     def is_valid_message(self, state, message_id):
+        self._clean_deferred_chain()
         lookup_result = self._handlers.get(state)
         if lookup_result is None:
             if not self.is_valid_state(state):
@@ -156,6 +157,7 @@ class WorkflowBase(object):
         return self.verbose_type_names.get(state)
 
     def get_nonfinal_states(self):
+        self._clean_deferred_chain()
         return self._handlers.keys()
 
     def get_checkers_by_state(self, state):
@@ -169,6 +171,7 @@ class WorkflowBase(object):
         return self._resource_checkers_by_state.get(state, set())
 
     def get_available_messages(self, state):
+        self._clean_deferred_chain()
         lookup_result = self._handlers.get(state)
         if lookup_result is None:
             if not self.is_valid_state(state):
