@@ -28,7 +28,9 @@ def create(workflow_type, sender, raw_parameters):
         raise CreateValidationError(form.errors)
 
 
-def start_workflow(obj, sender, start_message_params):
+def start_workflow(obj, sender, start_message_params=None):
+    if start_message_params is None:
+        start_message_params = {}
     workflow = get_workflow_by_instance(obj)
 
     if isinstance(workflow.start_workflow, basestring):
