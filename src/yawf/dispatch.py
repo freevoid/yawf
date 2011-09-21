@@ -29,11 +29,10 @@ def dispatch_message(obj, message):
     message = clean_message_data(workflow, obj, message)
 
     current_state = getattr(obj, workflow.state_attr_name)
-    permission_checker, handler = workflow.get_handler(current_state,
-                                                        message.id)
+    handler = workflow.get_handler(current_state, message.id)
 
     # check permission for a sender
-    if not permission_checker(obj, message.sender):
+    if not handler.permission_checker(obj, message.sender):
         raise PermissionDeniedError(obj, message)
 
     handler_result = apply(handler, (obj, message.sender), message.params)

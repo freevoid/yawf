@@ -247,7 +247,7 @@ class WorkflowBase(object):
         if handler is None:
             raise UnhandledMessageError(message_id, lookup_result.keys())
 
-        return handler.permission_checker, handler
+        return handler
 
     def get_action(self, from_state, to_state, message_id):
         # TODO: refactor
