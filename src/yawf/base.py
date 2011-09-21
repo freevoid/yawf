@@ -137,9 +137,6 @@ class WorkflowBase(object):
         for container_name, container_fabric in cls._containers:
             setattr(cls, container_name, container_fabric())
 
-    def _is_grouped_message_id(self, message_id):
-        return self.message_id_grouper in message_id
-
     def _clean_deferred_chain(self):
         for df in self._deferred:
             df()
@@ -283,6 +280,10 @@ class WorkflowBase(object):
             raise MessageSpecNotRegisteredError(message_id)
         return message_spec
 
+    def get_handlers(self):
+        self._clean_deferred_chain()
+        return self._handlers
+
     def register_resource(self, resource_id=None, description=None,
             available_in_states=None,
             permission_checker=None,
@@ -358,9 +359,9 @@ class WorkflowBase(object):
 
         # handle message grouping
 
-        if self._is_grouped_message_id(message_spec.id):
-            splitted_id = self.split_grouped_message_id(message_spec.id)
-            group_path, final_id = splitted_id[:-1], splitted_id[-1]
+        if message_spec.is_grouped:
+            group_path, final_id = message_spec.group_path[:-1],\
+                                   message_spec.group_path[-1]
 
             group_dict = self._message_groups
 
@@ -399,7 +400,7 @@ class WorkflowBase(object):
         if issubclass(message_id, Handler):
             self.register_handler_obj(message_id(),
                 replace_if_exists=replace_if_exists,
-                defer=defer)
+                defer=message_id.defer)
             return message_id
 
         handler_obj = Handler(
