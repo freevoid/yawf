@@ -32,7 +32,7 @@ class Handler(object):
     message_group = None
     states_from = None
     permission_checker = None
-    defer = False
+    defer = True
 
     def __init__(self, message_id=None, states_from=None,
             message_group=None,
@@ -54,7 +54,7 @@ class Handler(object):
                 self.message_group = [message_group]
             else:
                 assert isinstance(message_group, collections.Iterable)
-        elif message_id is None:
+        elif self.message_id is None:
             raise ValueError("message_id must be specified for handler")
 
         if not isinstance(self.permission_checker, collections.Iterable):
@@ -78,15 +78,22 @@ class Handler(object):
         self.handle = lambda self, **kwargs: handle_func(**kwargs)
 
 
+class AnnotatingSimpleStateMeta(type):
+
+    def __new__(cls, name, bases, attrs):
+
+        new_cls = super(AnnotatingSimpleStateMeta, cls).__new__(
+                cls, name, bases, attrs)
+        new_cls.states_to = [new_cls.state_to]
+        new_cls.is_annotated = True
+        return new_cls
+
+
 class SimpleStateTransition(Handler):
+
+    __metaclass__ = AnnotatingSimpleStateMeta
 
     state_to = None
 
     def handle(self, obj, sender, **kwargs):
         return self.state_to
-
-
-def make_simple_transition(state_to):
-    class Transition(SimpleStateTransition):
-        state_to = state_to
-    return Transition
