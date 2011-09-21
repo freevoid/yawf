@@ -42,8 +42,8 @@ def build_handlers_graph(workflow):
     unknown_state = g.get_node('?')
     unknown_state.attr['color'] = unknown_color
 
-    for state_from, state_lookup in workflow._handlers.iteritems():
-        for message, (checker, handler) in state_lookup.iteritems():
+    for state_from, state_lookup in workflow.get_handlers().iteritems():
+        for message, handler in state_lookup.iteritems():
             if hasattr(handler, 'is_annotated'):
                 if len(handler.states_to) > 1:
                     style = 'dashed'
