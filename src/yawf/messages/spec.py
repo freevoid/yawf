@@ -26,7 +26,31 @@ class MessageSpecMeta(type):
     def __new__(cls, name, bases, attrs):
         if 'Validator' in attrs:
             attrs['validator_cls'] = attrs['Validator']
-        return super(MessageSpecMeta, cls).__new__(cls, name, bases, attrs)
+
+        new_cls = super(MessageSpecMeta, cls).__new__(cls, name, bases, attrs)
+
+        grouper = new_cls.id_grouper
+        message_id = new_cls.id
+
+        if message_id is None:
+            if not (len(bases) == 1 and bases[0] is object):
+                raise ValueError(
+                    'You must specify not-None id for MessageSpec subclass')
+        else:
+            if grouper in message_id:
+                new_cls.group_path = message_id.split(grouper)
+                new_cls.is_grouped = True
+            else:
+                new_cls.group_path = []
+                new_cls.is_grouped = False
+
+            if new_cls.verb is None:
+                new_cls.verb = new_cls.id
+
+        return new_cls
+
+    def __unicode__(cls):
+        return unicode(cls.verb) or type.__str__(cls)
 
 
 class MessageSpec(object):
@@ -52,6 +76,9 @@ class MessageSpec(object):
     validator_cls = EmptyValidator
     # rank used to sort specs
     rank = 0
+
+    id_grouper = '__'
+    is_grouped = False
 
     @classmethod
     def params_wrapper(cls, params):
