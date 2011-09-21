@@ -8,7 +8,7 @@ from django.utils.datastructures import MergeDict
 from yawf import _register_workflow
 from yawf.config import INITIAL_STATE, DEFAULT_START_MESSAGE
 from yawf import permissions
-from yawf.actions import SideEffectAction
+from yawf.actions import SideEffect
 from yawf.resources import WorkflowResource
 from yawf.exceptions import (
     UnhandledMessageError,
@@ -490,11 +490,11 @@ class WorkflowBase(object):
 
     def register_action(self, message_id=None, states_from=None, states_to=None):
 
-        if not isinstance(message_id, basestring) and issubclass(message_id, SideEffectAction):
+        if issubclass(message_id, SideEffect):
             self.register_action_obj(message_id())
             return message_id
 
-        action_obj = SideEffectAction(
+        action_obj = SideEffect(
             message_id=message_id,
             states_from=states_from,
             states_to=states_to)

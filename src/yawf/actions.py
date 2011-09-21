@@ -3,7 +3,7 @@ Action in yawf is a side-effect that can be performed after certain changes in
 workflow.
 '''
 
-class SideEffectAction(object):
+class SideEffect(object):
 
     message_id = None
     states_from = None
@@ -18,6 +18,8 @@ class SideEffectAction(object):
         if states_from is not None:
             self.states_from = states_from
 
+        super(SideEffect, self).__init__()
+
     def perform(self, **kwargs):
         return kwargs
 
@@ -30,3 +32,7 @@ class SideEffectAction(object):
     @property
     def name(self):
         return self.__class__.__name__
+
+
+# for backward-compatibility
+SideEffectAction = SideEffect
