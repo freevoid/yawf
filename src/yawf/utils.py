@@ -43,8 +43,8 @@ def make_common_updater(kwargs, field_names=None):
     return common_updater
 
 
-def common_cancel(obj, soft_delete_attr=None):
-    obj.state = 'canceled'
+def common_cancel(obj, cancel_state='canceled', soft_delete_attr=None):
+    obj.state = cancel_state
     if soft_delete_attr:
         setattr(obj, soft_delete_attr, True)
     obj.save()
@@ -57,9 +57,10 @@ def common_start(obj, state, soft_delete_attr=None):
     obj.save()
 
 
-def make_common_cancel(soft_delete_attr=None):
+def make_common_cancel(cancel_state='canceled', soft_delete_attr=None):
 
     return partial(common_cancel,
+        cancel_state=cancel_state,
         soft_delete_attr=soft_delete_attr)
 
 
@@ -73,6 +74,7 @@ def optionally_edit(handler):
 
     @wraps(handler)
     def wrapper(obj, sender, edit_fields=None, **kwargs):
+
         handler_result = handler(obj, sender, **kwargs)
         workflow = get_workflow_by_instance(obj)
 
