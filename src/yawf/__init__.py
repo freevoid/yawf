@@ -27,7 +27,7 @@ def _register_workflow(workflow):
 
 # external api
 get_registered_workflows = lambda: _by_rank
-get_workflow = _registry.get
+get_workflow = lambda workflow_id: _registry.get(workflow_id)
 
 
 def get_workflow_name_map():
