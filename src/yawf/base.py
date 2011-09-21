@@ -219,16 +219,13 @@ class WorkflowBase(object):
 
     def get_handler(self, state, message_id):
         '''
-        Return two-tuple of two callables: permission checker (takes
-        sender and workflow object) and callable from handler's table.
-        Takes incoming message id and current state.
+        Return Handler instance to handle ``message_id'' for workflow in state
+        ``state''.
 
-        Handler callable gets workflow object, message sender and arbitrary
-        keyword arguments (passed with message) and must return new
-        state id based on this information (it can return None if
-        message should be ignored). If handler returns a callable, then
-        this callable applies as transaction on object (to change
-        its state).
+        :param state:
+            Current basic state of workflow.
+        :param message_id:
+            id of incoming message.
 
         If there are no handler for this message_id, raises
         UnhandledMessageError(message_id).
