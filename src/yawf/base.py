@@ -9,6 +9,7 @@ from yawf import _register_workflow
 from yawf.config import INITIAL_STATE, DEFAULT_START_MESSAGE
 from yawf import permissions
 from yawf.actions import SideEffect
+from yawf.handlers import Handler
 from yawf.resources import WorkflowResource
 from yawf.exceptions import (
     UnhandledMessageError,
@@ -81,7 +82,6 @@ class WorkflowBase(object):
     state_attr_name = 'state'
 
     exportable_fields = ('rank', 'verbose_name',)
-    message_id_grouper = '__'
     # message id or callable that returns message context to start workflow
     start_workflow = DEFAULT_START_MESSAGE
 
@@ -157,12 +157,6 @@ class WorkflowBase(object):
             return False
 
         return message_id in lookup_result
-
-    def message_id_from_grouped(self, group_path):
-        return self.message_id_grouper.join(group_path)
-
-    def split_grouped_message_id(self, message_id):
-        return message_id.split(self.message_id_grouper)
 
     def get_message_ids_by_path(self, group_path):
         cur_level = self._message_groups
@@ -248,14 +242,12 @@ class WorkflowBase(object):
         if lookup_result is None:
             raise IllegalStateError(state)
 
-        complex_handler = lookup_result.get(message_id)
+        handler = lookup_result.get(message_id)
 
-        if complex_handler is None:
+        if handler is None:
             raise UnhandledMessageError(message_id, lookup_result.keys())
 
-        permission_checkers, handler = complex_handler
-
-        return OrChecker(*permission_checkers), handler
+        return handler.permission_checker, handler
 
     def get_action(self, from_state, to_state, message_id):
         # TODO: refactor
@@ -407,55 +399,74 @@ class WorkflowBase(object):
         method and functions in yawf.messages.allowed).
         '''
 
-        if permission_checker is None:
-            permission_checker = (self.default_permission_checker,)
+        if issubclass(message_id, Handler):
+            self.register_handler_obj(message_id(),
+                replace_if_exists=replace_if_exists,
+                defer=defer)
+            return message_id
 
-        if not isinstance(permission_checker, collections.Iterable):
-            permission_checkers = (permission_checker,)
-        else:
-            permission_checkers = permission_checker
+        handler_obj = Handler(
+            message_id=message_id,
+            states_from=states_from,
+            permission_checker=permission_checker,
+            message_group=message_group)
 
-        if states_from is None:
+        def registrator(handler_func):
+
+            if handler_obj.message_id is None:
+                handler_obj.message_id = handler_func.__name__
+
+            handler_obj.set_performer(handler_func)
+            self.register_handler_obj(handler_obj,
+                replace_if_exists=replace_if_exists,
+                defer=defer)
+            return handler_func
+
+        return registrator
+
+    def register_handler_obj(self, handler, replace_if_exists=False, defer=True):
+        if handler.permission_checker is None:
+            handler.permission_checker = OrChecker(
+                self.default_permission_checker)
+
+        if handler.states_from is None:
             # defaulting states_from to any extra state
-            states_from = self.states
-
-        def registrator(handler, message_id=message_id):
-            if message_group is not None:
-                if isinstance(message_group, basestring):
-                    group_path = [message_group]
-                else:
-                    assert isinstance(message_group, collections.Iterable)
-                    group_path = message_group
-                message_id_list = self.get_message_ids_by_path(group_path)
-            else:
-                message_id_list = []
-
-            if message_id is None:
-                message_id_list.append(handler.__name__)
-            else:
-                message_id_list.append(message_id)
-
-            for state in states_from:
-                # add handler to lookup table by (state, message_id)
-                handlers = self._handlers.setdefault(state, {})
-                for message_id in message_id_list:
-                    if message_id in handlers and not replace_if_exists:
-                        raise ValueError(
-                            "Handler for state %s, message %s already registered"
-                                % (state, message_id))
-                    handlers[message_id] = (permission_checkers, handler)
-
-                # add checker to checkers_by_state index
-                checkers_set = self._message_checkers_by_state.setdefault(state, set())
-                checkers_set.update(permission_checkers)
-            return handler
+            handler.states_from = self.states
 
         if defer:
-            def defered_registrator(handler):
-                self._deferred.append(lambda: registrator(handler))
-            return defered_registrator
+            deferred = lambda: self._handler_registrator(handler)
+            self._deferred.append(deferred)
         else:
-            return registrator
+            self._handler_registrator(handler)
+
+        return handler
+
+    def _handler_registrator(self, handler, replace_if_exists=False):
+        group_path = handler.message_group
+
+        if group_path is not None:
+            message_id_list = self.get_message_ids_by_path(group_path)
+        else:
+            message_id_list = []
+
+        if handler.message_id is not None:
+            message_id_list.append(handler.message_id)
+
+        for state in handler.states_from:
+            # add handler to lookup table by (state, message_id)
+            handlers = self._handlers.setdefault(state, {})
+            for message_id in message_id_list:
+                if message_id in handlers and not replace_if_exists:
+                    raise ValueError(
+                        "Handler for state %s, message %s already registered"
+                            % (state, message_id))
+                handlers[message_id] = handler
+
+            # add checker to checkers_by_state index
+            checkers_set = self._message_checkers_by_state.setdefault(state, set())
+            checkers_set.update(
+                handler.permission_checker.get_atomical_checkers())
+        return handler
 
     def register_action_obj(self, action_obj):
         message_id = action_obj.message_id
