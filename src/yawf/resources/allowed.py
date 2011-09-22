@@ -10,7 +10,7 @@ def get_allowed_resources(sender, obj):
             workflow.get_checkers_by_state(obj.state))
 
     for resource in workflow.get_available_resources(obj.state):
-        if any(check_result.get(i) for i in resource.checkers):
+        if resource.permission_checker(obj, sender, cache=check_result):
             yield resource
 
 

@@ -73,7 +73,7 @@ class WorkflowBase(object):
     rank = 0
     initial_state = INITIAL_STATE
     states = ()
-    default_permission_checker = staticmethod(permissions.allow_to_all)
+    default_permission_checker = permissions.allow_to_all
     create_form_cls = None
     create_form_template = None
     verbose_name = None
@@ -188,8 +188,8 @@ class WorkflowBase(object):
                 raise IllegalStateError(state)
             return ()
 
-        return ((permission_checkers, message_id) for
-                    message_id, (permission_checkers, _handler) in
+        return ((_handler.permission_checker, message_id) for
+                    message_id, _handler in
                         lookup_result.iteritems())
 
     def get_available_resources(self, state):
@@ -290,12 +290,11 @@ class WorkflowBase(object):
             slug=None):
 
         if permission_checker is None:
-            permission_checker = (self.default_permission_checker,)
-
-        if not isinstance(permission_checker, collections.Iterable):
-            permission_checkers = (permission_checker,)
+            permission_checker = OrChecker(self.default_permission_checker)
+        elif not isinstance(permission_checker, collections.Iterable):
+            permission_checker = OrChecker(permission_checker)
         else:
-            permission_checkers = permission_checker
+            permission_checker = OrChecker(*permission_checker)
 
         if available_in_states is None:
             available_in_states = self._valid_states
@@ -310,7 +309,7 @@ class WorkflowBase(object):
 
             resource = WorkflowResource(handler, resource_id=resource_id,
                     description=description,
-                    permission_checkers=permission_checkers,
+                    permission_checker=permission_checker,
                     slug=slug)
 
             self._resources[resource_id] = resource
@@ -322,7 +321,7 @@ class WorkflowBase(object):
 
                 checkers_set = self._resource_checkers_by_state.setdefault(
                         state, set())
-                checkers_set.update(permission_checkers)
+                checkers_set.update(permission_checker.get_atomical_checkers())
 
             return handler
 
@@ -461,7 +460,8 @@ class WorkflowBase(object):
                 handlers[message_id] = handler
 
             # add checker to checkers_by_state index
-            checkers_set = self._message_checkers_by_state.setdefault(state, set())
+            checkers_set = self._message_checkers_by_state.setdefault(
+                state, set())
             checkers_set.update(
                 handler.permission_checker.get_atomical_checkers())
         return handler

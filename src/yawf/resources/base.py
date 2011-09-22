@@ -1,17 +1,15 @@
 from yawf.exceptions import ResourcePermissionDeniedError
-from yawf.permissions import AndChecker
 
 
 class WorkflowResource(object):
 
-    def __init__(self, handler, resource_id, permission_checkers,
+    def __init__(self, handler, resource_id, permission_checker,
                                                 description=None,
                                                 slug=None):
         super(WorkflowResource, self).__init__()
         self._handler = handler
         self.id = resource_id
-        self.checkers = permission_checkers
-        self.permission_checker = AndChecker(*permission_checkers)
+        self.permission_checker = permission_checker
         self.description = description
         self.slug = slug or self.id
 
