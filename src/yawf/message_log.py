@@ -53,10 +53,13 @@ def log_message(sender, **kwargs):
 
     instance_ct = ContentType.objects.get_for_model(instance)
 
-    revision = Revision.objects.only('id').get(
-        object_id=instance.id,
-        content_type=instance_ct,
-        revision=current_revision)
+    if current_revision:
+        revision = Revision.objects.only('id').get(
+            object_id=instance.id,
+            content_type=instance_ct,
+            revision=current_revision)
+    else:
+        revision = None
 
     new_revision = Revision.objects.only('id').get(
         object_id=instance.id,
