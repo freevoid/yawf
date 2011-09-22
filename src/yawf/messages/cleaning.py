@@ -8,6 +8,9 @@ def clean_message_data(workflow, obj, message):
 
     if validator.is_valid():
         message.params = message_spec.params_wrapper(validator.cleaned_data)
+        # fix id in case it was a list (group path)
+        message.id = message_spec.id
+        message.spec = message_spec
     else:
         raise MessageValidationError(validator.errors)
 
