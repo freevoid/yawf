@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-allow_to_all = lambda obj, sender: True
-restrict_to_all = lambda obj, sender: False
-
 
 class BasePermissionChecker(object):
 
@@ -19,6 +16,9 @@ class BasePermissionChecker(object):
     def get_atomical_checkers(self):
         for c in self._checkers:
             if isinstance(c, BasePermissionChecker):
+                if c is self:
+                    # recursive checker TODO: log with warning
+                    continue
                 for child_c in c.get_atomical_checkers():
                     yield child_c
             else:
@@ -60,7 +60,7 @@ class AndChecker(BasePermissionChecker):
             self.perform_child_checker(c, obj, sender, cache=cache)
             for c in self._checkers)
 
-    def __and__(self, other):
+    def __iand__(self, other):
         self.add_checker(other)
         return self
 
@@ -75,7 +75,7 @@ class OrChecker(BasePermissionChecker):
             self.perform_child_checker(c, obj, sender, cache=cache)
             for c in self._checkers)
 
-    def __or__(self, other):
+    def __ior__(self, other):
         self.add_checker(other)
         return self
 
@@ -97,4 +97,9 @@ class NotChecker(BasePermissionChecker):
         return self._invertable_checker
 
 
+# shortcut
 C = AndChecker
+
+# basic checkers
+allow_to_all = OrChecker(lambda obj, sender: True)
+restrict_to_all = OrChecker(lambda obj, sender: False)

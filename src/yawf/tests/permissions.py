@@ -80,7 +80,8 @@ class PermissionsTestCase(TestCase):
 
     def test_fill_cache(self):
         cache = self.complex_checker.fill_cache(2, 2)
+        allower = allow_to_all.get_atomical_checkers().next()
         self.assertEqual(len(cache), 3)
         self.assertTrue(self.sender_is_even in cache)
         self.assertTrue(self.obj_is_even in cache)
-        self.assertTrue(allow_to_all in cache)
+        self.assertTrue(allower in cache)
