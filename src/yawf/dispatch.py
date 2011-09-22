@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from yawf.config import STATE_TYPE_CONSTRAINT, REVISION_ATTR
+from yawf.config import STATE_TYPE_CONSTRAINT, REVISION_ATTR,\
+         TRANSACTIONAL_SIDE_EFFECT
 from yawf.exceptions import IllegalStateError,\
          WrongHandlerResultError, PermissionDeniedError,\
          MessageIgnored
@@ -14,11 +15,14 @@ logger = logging.getLogger(__name__)
 
 
 
-def dispatch(obj, sender, message_id, raw_params=None):
-    return dispatch_message(obj, Message(sender, message_id, raw_params))
+def dispatch(obj, sender, message_id, raw_params=None, extra_context=None):
+    return dispatch_message(
+            obj,
+            Message(sender, message_id, raw_params),
+            extra_context=extra_context)
 
 
-def dispatch_message(obj, message):
+def dispatch_message(obj, message, extra_context=None):
     logger.info(u"Backend got message from %s to %s: %s %s",
             message.sender, obj, message.id, message.raw_params)
 
@@ -57,14 +61,19 @@ def dispatch_message(obj, message):
         raise WrongHandlerResultError(handler_result)
 
     new_obj, transition_result, side_effect_result =\
-        transactional_transition(workflow, obj, message, state_transition)
+        transactional_transition(
+            workflow, obj, message, state_transition,
+            extra_context=extra_context,
+            transactional_side_effect=TRANSACTIONAL_SIDE_EFFECT)
 
     new_revision = getattr(new_obj, REVISION_ATTR, None)
 
+    # TODO: send_robust + logging?
     message_handled.send(
             sender=workflow.id,
             message=message,
             instance=obj,
+            new_instance=new_obj,
             transition_result=transition_result,
             new_revision=new_revision)
 
