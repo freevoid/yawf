@@ -57,6 +57,12 @@ class Handler(object):
         elif self.message_id is None:
             raise ValueError("message_id must be specified for handler")
 
+        if self.permission_checker is not None:
+            self._align_permission_checker()
+
+        super(Handler, self).__init__()
+
+    def _align_permission_checker(self):
         if not isinstance(self.permission_checker, collections.Iterable):
             if not isinstance(self.permission_checker, BasePermissionChecker):
                 self.permission_checker = OrChecker(self.permission_checker,)
@@ -64,8 +70,6 @@ class Handler(object):
             self.permission_checker = OrChecker(*self.permission_checker)
 
         assert callable(self.permission_checker)
-
-        super(Handler, self).__init__()
 
     def __call__(self, obj, sender, **kwargs):
         return self.handle(obj, sender, **kwargs)
@@ -75,7 +79,8 @@ class Handler(object):
         return None
 
     def set_handler(self, handle_func):
-        self.handle = lambda self, **kwargs: handle_func(**kwargs)
+        self.handle = lambda obj, sender, **kwargs:\
+            handle_func(obj, sender, **kwargs)
 
 
 class AnnotatingSimpleStateMeta(type):

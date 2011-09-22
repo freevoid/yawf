@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import collections
+import types
 from operator import attrgetter
 import warnings
 
@@ -155,6 +156,15 @@ class WorkflowBase(object):
 
         return message_id in lookup_result
 
+
+    def get_message_spec_by_path(self, group_path):
+        cur_level = self._message_groups
+        for group_id in group_path:
+            cur_level = cur_level.get(group_id, None)
+            if not cur_level:
+                raise GroupPathEmptyError(group_path)
+        return cur_level
+
     def get_message_ids_by_path(self, group_path):
         cur_level = self._message_groups
         for group_id in group_path:
@@ -275,6 +285,15 @@ class WorkflowBase(object):
         return self._message_specs
 
     def get_message_spec(self, message_id):
+        '''
+        Get registered message spec class with given id.
+
+        Id can be iterable representing group path to the desired message.
+        '''
+        if not isinstance(message_id, basestring) and\
+                isinstance(message_id, collections.Iterable):
+            return self.get_message_spec_by_path(message_id)
+
         message_spec = self._message_specs.get(message_id)
         if message_spec is None:
             raise MessageSpecNotRegisteredError(message_id)
@@ -396,24 +415,27 @@ class WorkflowBase(object):
         method and functions in yawf.messages.allowed).
         '''
 
-        if issubclass(message_id, Handler):
+        if isinstance(message_id, types.ClassType) and\
+                issubclass(message_id, Handler):
             self.register_handler_obj(message_id(),
-                replace_if_exists=replace_if_exists,
+                replace_if_exists=message_id.replace_if_exists,
                 defer=message_id.defer)
             return message_id
 
-        handler_obj = Handler(
-            message_id=message_id,
-            states_from=states_from,
-            permission_checker=permission_checker,
-            message_group=message_group)
-
         def registrator(handler_func):
 
-            if handler_obj.message_id is None:
-                handler_obj.message_id = handler_func.__name__
+            if message_id is None:
+                _message_id = handler_func.__name__
+            else:
+                _message_id = message_id
 
-            handler_obj.set_performer(handler_func)
+            handler_obj = Handler(
+                message_id=_message_id,
+                states_from=states_from,
+                permission_checker=permission_checker,
+                message_group=message_group)
+
+            handler_obj.set_handler(handler_func)
             self.register_handler_obj(handler_obj,
                 replace_if_exists=replace_if_exists,
                 defer=defer)
@@ -447,7 +469,13 @@ class WorkflowBase(object):
             message_id_list = []
 
         if handler.message_id is not None:
-            message_id_list.append(handler.message_id)
+            if isinstance(handler.message_id, basestring):
+                message_id_list.append(handler.message_id)
+            elif isinstance(handler.message_id, collections.Iterable):
+                message_id_list.extend(handler.message_id)
+            else:
+                raise ValueError("Message id of unexpected type: %s" %
+                        handler.message_id)
 
         for state in handler.states_from:
             # add handler to lookup table by (state, message_id)
@@ -466,52 +494,84 @@ class WorkflowBase(object):
                 handler.permission_checker.get_atomical_checkers())
         return handler
 
-    def register_action_obj(self, action_obj):
-        message_id = action_obj.message_id
+    def register_action_obj(self, action_obj, defer=True):
+
+        if defer:
+            deferred = lambda: self._action_registrator(action_obj)
+            self._deferred.append(deferred)
+        else:
+            self._action_registrator(action_obj)
+
+        return action_obj
+
+    def _action_registrator(self, action_obj):
+
+        group_path = action_obj.message_group
+
+        if group_path is not None:
+            message_id_list = self.get_message_ids_by_path(group_path)
+        else:
+            message_id_list = []
+
+        if action_obj.message_id is not None:
+            if isinstance(action_obj.message_id, basestring):
+                message_id_list.append(action_obj.message_id)
+            elif isinstance(action_obj.message_id, collections.Iterable):
+                message_id_list.extend(action_obj.message_id)
+            else:
+                raise ValueError("Message id of unexpected type: %s" %
+                        action_obj.message_id)
+
         states_to, states_from = action_obj.states_to, action_obj.states_from
 
-        if states_to is None:
-            if states_from is not None:
-                for state_from in states_from:
-                    key = (state_from, message_id)
-                    self._actions_any_destination[key] = action_obj
+        for message_id in message_id_list:
+            if states_to is None:
+                if states_from is not None:
+                    for state_from in states_from:
+                        key = (state_from, message_id)
+                        self._actions_any_destination[key] = action_obj
+                        tmp = self._actions_for_possible.setdefault(key, [])
+                        tmp.append(action_obj)
+                else:
+                    key = message_id
+                    self._actions_any_states[key] = action_obj
                     tmp = self._actions_for_possible.setdefault(key, [])
                     tmp.append(action_obj)
             else:
-                key = message_id
-                self._actions_any_states[key] = action_obj
-                tmp = self._actions_for_possible.setdefault(key, [])
-                tmp.append(action_obj)
-        else:
-            if states_from is None:
-                for state_to in states_to:
-                    key = (state_to, message_id)
-                    self._actions_any_startpoint[key] = action_obj
-                tmp = self._actions_for_possible.setdefault((None, message_id), [])
-                tmp.append(action_obj)
-            else:
-                for state_to in states_to:
-                    for state_from in states_from:
-                        key = (state_from, state_to, message_id)
-                        self._actions[key] = action_obj
-                        tmp = self._actions_for_possible.setdefault((state_from, message_id), [])
-                        tmp.append(action_obj)
+                if states_from is None:
+                    for state_to in states_to:
+                        key = (state_to, message_id)
+                        self._actions_any_startpoint[key] = action_obj
+                    tmp = self._actions_for_possible.setdefault((None, message_id), [])
+                    tmp.append(action_obj)
+                else:
+                    for state_to in states_to:
+                        for state_from in states_from:
+                            key = (state_from, state_to, message_id)
+                            self._actions[key] = action_obj
+                            tmp = self._actions_for_possible.setdefault((state_from, message_id), [])
+                            tmp.append(action_obj)
 
-    def register_action(self, message_id=None, states_from=None, states_to=None):
+    def register_action(self,
+            message_id=None, message_group=None,
+            states_from=None, states_to=None):
 
         if issubclass(message_id, SideEffect):
             self.register_action_obj(message_id())
             return message_id
 
-        action_obj = SideEffect(
-            message_id=message_id,
-            states_from=states_from,
-            states_to=states_to)
-
         def registrator(action):
 
-            if action_obj.message_id is None:
-                action_obj.message_id = action.__name__
+            if message_id is None:
+                _message_id = action.__name__
+            else:
+                _message_id = message_id
+
+            action_obj = SideEffect(
+                message_id=_message_id,
+                states_from=states_from,
+                states_to=states_to,
+                message_group=message_group)
 
             action_obj.set_performer(action)
             self.register_action_obj(action_obj)
