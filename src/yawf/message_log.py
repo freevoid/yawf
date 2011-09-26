@@ -44,9 +44,10 @@ class MessageLog(models.Model):
 def log_message(sender, **kwargs):
     message = kwargs['message']
     instance = kwargs['instance']
+    new_instance = kwargs['new_instance']
     transition_result = kwargs['transition_result']
     current_revision = instance.revision
-    new_revision = kwargs.get('new_revision', (current_revision+1))
+    new_revision_id = new_instance.revision
 
     initiator = message.sender\
                 if isinstance(message.sender, models.Model) else None
@@ -61,10 +62,13 @@ def log_message(sender, **kwargs):
     else:
         revision = None
 
-    new_revision = Revision.objects.only('id').get(
-        object_id=instance.id,
-        content_type=instance_ct,
-        revision=new_revision)
+    if new_revision_id:
+        new_revision = Revision.objects.only('id').get(
+            object_id=instance.id,
+            content_type=instance_ct,
+            revision=new_revision_id)
+    else:
+        new_revision = None
 
     log_record = MessageLog.objects.create(
         initiator=initiator,
