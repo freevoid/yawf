@@ -11,7 +11,7 @@ def chained_apply(callables_iterable):
     return chained_wrapper
 
 
-def make_common_updater(kwargs, field_names=None):
+def make_common_updater(kwargs, field_names=None, post_hook=None):
 
     # to ensure that we will update, not insert new
     kwargs.pop('id', None)
@@ -25,6 +25,9 @@ def make_common_updater(kwargs, field_names=None):
                     setattr(obj, field_name, value)
 
             obj.save()
+
+            if callable(post_hook):
+                return post_hook(obj)
     else:
         def common_updater(obj):
 
@@ -39,6 +42,9 @@ def make_common_updater(kwargs, field_names=None):
                     setattr(obj, field_name, value)
 
             obj.save()
+
+            if callable(post_hook):
+                return post_hook(obj)
 
     return common_updater
 
