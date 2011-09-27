@@ -1,4 +1,5 @@
 from datetime import datetime, date
+from operator import attrgetter
 from functools import partial
 
 from django.db import models
@@ -21,6 +22,8 @@ class CustomJSONEncoder(DjangoJSONEncoder):
             return o.strftime("%Y-%m-%d")
         elif isinstance(o, models.Model):
             return force_unicode(o.pk)
+        elif isinstance(o, models.query.QuerySet):
+            return map(attrgetter('pk'), o)
         elif isinstance(o, set):
             return list(o)
         else:
