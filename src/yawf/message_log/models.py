@@ -6,7 +6,7 @@ from django.contrib.contenttypes import generic
 
 from yawf import serialize_utils as json
 
-from yawf.revision import Revision
+from yawf.revision.models import Revision
 from yawf.config import MESSAGE_LOG_ENABLED
 from yawf.signals import message_handled
 
@@ -39,6 +39,8 @@ class MessageLog(models.Model):
 
     revision_before = models.ForeignKey(Revision, related_name='post_message', null=True)
     revision_after = models.ForeignKey(Revision, related_name='pre_message', null=True)
+
+    workflow_id = models.CharField(max_length=64, db_index=True, default='')
 
 
 def log_message(sender, **kwargs):
@@ -74,6 +76,7 @@ def log_message(sender, **kwargs):
         initiator=initiator,
         message=message.id,
         message_params=json.dumps(message.params),
+        workflow_id=sender,
         revision_before=revision,
         revision_after=new_revision,
         instance=instance,
