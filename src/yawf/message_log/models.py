@@ -41,6 +41,7 @@ class MessageLog(models.Model):
     revision_after = models.ForeignKey(Revision, related_name='pre_message', null=True)
 
     workflow_id = models.CharField(max_length=64, db_index=True, default='')
+    parent_id = models.ForeignKey('self', blank=True, null=True)
 
 
 def log_message(sender, **kwargs):
