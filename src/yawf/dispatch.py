@@ -71,6 +71,7 @@ def dispatch_message(obj, message, extra_context=None):
     # TODO: send_robust + logging?
     message_handled.send(
             sender=workflow.id,
+            workflow=workflow,
             message=message,
             instance=obj,
             new_instance=new_obj,

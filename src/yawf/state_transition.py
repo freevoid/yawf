@@ -82,6 +82,7 @@ def _transactional_transition(workflow, obj, message, state_transition,
 
     transition_handled.send(
             sender=workflow.id,
+            workflow=workflow,
             message=message,
             instance=obj,
             new_instance=locked_obj,
