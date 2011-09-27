@@ -29,6 +29,13 @@ def _register_workflow(workflow):
 get_registered_workflows = lambda: _by_rank
 get_workflow = lambda workflow_id: _registry.get(workflow_id)
 
+class WorkflowChoices(object):
+
+    def __iter__(self):
+        return get_workflow_name_map().iteritems()
+
+choices = WorkflowChoices()
+
 
 def get_workflow_name_map():
     return dict((workflow.id, workflow.verbose_name) for workflow
