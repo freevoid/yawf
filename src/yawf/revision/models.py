@@ -20,6 +20,7 @@ class Revision(models.Model):
     instance = generic.GenericForeignKey()
 
     revision = models.PositiveIntegerField(db_index=True)
+    is_created = models.BooleanField(db_index=True, default=False)
 
     serialized_fields = models.TextField()
 
@@ -32,7 +33,7 @@ class Revision(models.Model):
         return deserialize(self.serialized_fields)
 
     @classmethod
-    def save_revision(cls, obj, message_log_record=None):
+    def save_revision(cls, obj, message_log_record=None, is_created=False):
 
         if isinstance(obj, WorkflowAwareModelBase):
             clarified = obj.get_clarified_instance()
@@ -43,6 +44,7 @@ class Revision(models.Model):
             cls.objects.create(
                 revision=getattr(obj, REVISION_ATTR),
                 instance=obj,
+                is_created=is_created,
                 serialized_fields=serialize(clarified),
                 message_log_record=message_log_record,
             )
@@ -50,6 +52,7 @@ class Revision(models.Model):
             cls.objects.create(
                 revision=getattr(obj, REVISION_ATTR),
                 instance=obj,
+                is_created=is_created,
                 serialized_fields=serialize(clarified),
             )
 
@@ -62,7 +65,8 @@ class Revision(models.Model):
 
 def log_revision(sender, **kwargs):
     instance = kwargs['instance']
-    Revision.save_revision(instance)
+    is_created = kwargs['created']
+    Revision.save_revision(instance, is_created=is_created)
 
 
 def setup_handlers(dotted_list=REVISION_CONTROLLED_MODELS):
