@@ -34,10 +34,11 @@ def start_workflow(obj, sender, start_message_params=None):
     workflow = get_workflow_by_instance(obj)
 
     if isinstance(workflow.start_workflow, basestring):
-        return dispatch.dispatch(obj, sender, workflow.start_workflow)
+        start_message_id = workflow.start_workflow
     elif callable(workflow.start_workflow):
         start_message_id  = workflow.start_workflow(obj, sender)
-        return dispatch.dispatch(obj, sender, start_message_id,
-                                                    start_message_params)
     else:
-        return dispatch.dispatch(obj, sender, DEFAULT_START_MESSAGE)
+        start_message_id  = DEFAULT_START_MESSAGE
+
+    return dispatch.dispatch(obj, sender, start_message_id,
+                                                start_message_params)
