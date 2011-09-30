@@ -33,6 +33,7 @@ class Handler(object):
     states_from = None
     permission_checker = None
     defer = True
+    replace_if_exists = False
 
     def __init__(self, message_id=None, states_from=None,
             message_group=None,
@@ -83,22 +84,14 @@ class Handler(object):
             handle_func(obj, sender, **kwargs)
 
 
-class AnnotatingSimpleStateMeta(type):
-
-    def __new__(cls, name, bases, attrs):
-
-        new_cls = super(AnnotatingSimpleStateMeta, cls).__new__(
-                cls, name, bases, attrs)
-        new_cls.states_to = [new_cls.state_to]
-        new_cls.is_annotated = True
-        return new_cls
-
-
 class SimpleStateTransition(Handler):
 
-    __metaclass__ = AnnotatingSimpleStateMeta
-
     state_to = None
+
+    def __init__(self, *args, **kwargs):
+        self.states_to = [self.state_to]
+        self.is_annotated = True
+        super(SimpleStateTransition, self).__init__(*args, **kwargs)
 
     def handle(self, obj, sender, **kwargs):
         return self.state_to
