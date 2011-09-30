@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import collections
-import types
 from operator import attrgetter
 import warnings
 
@@ -415,7 +414,8 @@ class WorkflowBase(object):
         method and functions in yawf.messages.allowed).
         '''
 
-        if isinstance(message_id, types.ClassType) and\
+        # NOTE: isinstance(foo, ClassType) doesn't work with custom metaclasses
+        if hasattr(message_id, '__bases__') and\
                 issubclass(message_id, Handler):
             self.register_handler_obj(message_id(),
                 replace_if_exists=message_id.replace_if_exists,
