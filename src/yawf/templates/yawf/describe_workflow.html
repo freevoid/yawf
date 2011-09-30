@@ -1,0 +1,28 @@
+{% extends "yawf/base.html" %}
+
+{% block content %}
+<p>ID: {{ workflow.id }}</p>
+<p>Verbose name: {{ workflow.verbose_name }}</p>
+<p>Model class: {{ workflow.model_cls }}</p>
+
+<p>
+    Extra states:
+    <ul>
+        {% for state_id, verbose_name in workflow.verbose_state_names.items %}
+        <li>{{ state_id }} ({{ verbose_name }})</li>
+        {% endfor %}
+    </ul>
+    Non-final states: {{ workflow.get_nonfinal_states }}
+</p>
+
+<p>
+    Registered messages:
+    <ul>
+        {% for message_id, spec in workflow.get_message_specs.iteritems %}
+            <li>{{ message_id }}{% if spec.verb %} ({{ spec }}){% endif %}</li>
+        {% empty %}
+            <li style="color: red; font-weight: bold;">No messages registered</li>
+        {% endfor %}
+    </ul>
+</p>
+{% endblock %}
