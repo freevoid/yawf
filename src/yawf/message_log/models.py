@@ -49,8 +49,11 @@ def log_message(sender, **kwargs):
     instance = kwargs['instance']
     new_instance = kwargs['new_instance']
     transition_result = kwargs['transition_result']
-    current_revision = instance.revision
-    new_revision_id = new_instance.revision
+    if hasattr(instance, 'revision'):
+        current_revision = instance.revision
+        new_revision_id = new_instance.revision
+    else:
+        current_revision = new_revision_id = None
 
     initiator = message.sender\
                 if isinstance(message.sender, models.Model) else None
@@ -79,8 +82,7 @@ def log_message(sender, **kwargs):
     else:
         new_revision = None
 
-    log_record = MessageLog.objects.create(
-        initiator=initiator,
+    create_dict = dict(
         message=message.id,
         message_params=json.dumps(message.params),
         workflow_id=sender,
@@ -88,6 +90,9 @@ def log_message(sender, **kwargs):
         revision_after=new_revision,
         instance=instance,
     )
+    if initiator:
+        create_dict['initiator'] = initiator
+    log_record = MessageLog.objects.create(**create_dict)
 
     if isinstance(transition_result, Iterable):
         for affected_obj in transition_result:
