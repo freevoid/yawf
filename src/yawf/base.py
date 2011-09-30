@@ -584,3 +584,10 @@ class WorkflowBase(object):
 
     def post_create_hook(self, sender, cleaned_data, instance):
         pass
+
+    def validate(self):
+
+        assert self.model_class is not None
+        assert self._deferred or self._handlers
+        assert self._message_specs
+        assert self.states
