@@ -100,8 +100,9 @@ def _transactional_transition(workflow, obj, message, state_transition,
     else:
         side_effect_result = None
 
+    new_state = getattr(locked_obj, workflow.state_attr_name)
     logger.info("Performed state transition of object %d: %s -> %s",
-            obj_id, old_state, locked_obj.state)
+            obj_id, old_state, new_state)
     return locked_obj, affected_objects, side_effect_result
 
 
