@@ -72,12 +72,12 @@ class WorkflowBase(object):
 
     rank = 0
     initial_state = INITIAL_STATE
-    states = ()
+    state_choices = None
     default_permission_checker = permissions.allow_to_all
     create_form_cls = None
     create_form_template = None
     verbose_name = None
-    verbose_state_names = {}
+    verbose_state_names = None
     state_attr_name = 'state'
 
     model_class = None
@@ -115,7 +115,12 @@ class WorkflowBase(object):
         else:
             self.init_inherited_containers()
 
-        self.states = set(self.states)
+        if self.state_choices:
+            self.verbose_state_names = dict(self.state_choices)
+        elif self.verbose_state_names:
+            self.state_choices = self.verbose_state_names.items()
+
+        self.states = set(self.verbose_state_names.keys())
         self._valid_states = self.states.union([self.initial_state])
 
         if id is not None:
