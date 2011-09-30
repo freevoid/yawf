@@ -77,7 +77,6 @@ class WorkflowBase(object):
     create_form_cls = None
     create_form_template = None
     verbose_name = None
-    verbose_type_names = {}
     verbose_state_names = {}
     state_attr_name = 'state'
 
@@ -171,9 +170,6 @@ class WorkflowBase(object):
             if not cur_level:
                 raise GroupPathEmptyError(group_path)
         return map(attrgetter('id'), cur_level.itervalues())
-
-    def get_verbose_type(self, state):
-        return self.verbose_type_names.get(state)
 
     def get_nonfinal_states(self):
         self._clean_deferred_chain()
