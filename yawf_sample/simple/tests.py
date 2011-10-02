@@ -93,3 +93,20 @@ class SimpleWorkflowTest(TestCase, WorkflowTestMixin):
                 'height': height,
             })
         return yawf.creation.start_workflow(window, self.sender)
+
+
+class ViewTest(TestCase):
+
+    def test_handlers_graph(self):
+        response = self.client.get('/describe/simple/graph/handlers/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.has_header('Content-Type'))
+        self.assertEqual(response['Content-Type'], 'image/png')
+        self.assertTrue(len(response.content) > 1024)
+
+    def test_effects_graph(self):
+        response = self.client.get('/describe/simple/graph/effects/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.has_header('Content-Type'))
+        self.assertEqual(response['Content-Type'], 'image/png')
+        self.assertTrue(len(response.content) > 1024)

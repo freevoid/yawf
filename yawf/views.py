@@ -2,7 +2,7 @@ from django.template.response import TemplateResponse
 from django.http import Http404, HttpResponse
 
 from yawf import get_workflow
-from yawf.graph import build_actions_graph, build_handlers_graph
+from yawf.graph import build_effects_graph, build_handlers_graph
 
 
 def describe_workflow(request, workflow_id):
@@ -17,8 +17,8 @@ def handlers_graph(request, workflow_id):
     return _graph_view(request, workflow_id, build_handlers_graph)
 
 
-def actions_graph(request, workflow_id):
-    return _graph_view(request, workflow_id, build_actions_graph)
+def effects_graph(request, workflow_id):
+    return _graph_view(request, workflow_id, build_effects_graph)
 
 
 def _graph_view(request, workflow_id, build_func):
