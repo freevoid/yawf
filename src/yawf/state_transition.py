@@ -115,15 +115,15 @@ def perform_side_effect(old_obj, new_obj,
     old_state = getattr(old_obj, workflow.state_attr_name)
     new_state = getattr(new_obj, workflow.state_attr_name)
 
-    actions = workflow.library.get_actions(
+    effects = workflow.library.get_effects(
             old_state, new_state, message.id)
 
     if extra_context is None:
         extra_context = {}
 
-    if actions:
-        for action in actions:
-            yield action(
+    if effects:
+        for effect in effects:
+            yield effect(
                 old_obj=old_obj,
                 obj=new_obj,
                 sender=message.sender,
@@ -132,6 +132,6 @@ def perform_side_effect(old_obj, new_obj,
                 extra_context=extra_context,
             )
     else:
-        logger.warning(u"Action undefined: object id %s, state %s -> %s",
+        logger.warning(u"Effect undefined: object id %s, state %s -> %s",
                 new_obj.id, old_state, new_state)
         return
