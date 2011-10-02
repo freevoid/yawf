@@ -1,8 +1,8 @@
 # .coveragerc to control coverage.py
 [run]
 branch = True
-source = ../yawf/
-omit = ../yawf/migrations/*
+source = yawf/
+omit = yawf/migrations/*
 
 [report]
 # Regexes for lines to exclude from consideration

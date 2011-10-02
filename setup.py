@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup, find_packages, findall
 
-PACKAGE_ROOT = 'src'
+PACKAGE_ROOT = '.'
 PACKAGE_NAME = 'yawf'
 
 # populate namespace with __version__
@@ -12,7 +12,7 @@ root_dir = os.path.abspath(os.path.dirname(__file__))
 
 data_files = filter(
     lambda name: not name.endswith('.py') and not name.endswith('.pyc'),
-    findall('src/yawf'))
+    findall('yawf'))
 data_files = [x.split(os.sep, 2)[-1] for x in data_files]
 
 setup(

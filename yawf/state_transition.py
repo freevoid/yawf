@@ -132,6 +132,6 @@ def perform_side_effect(old_obj, new_obj,
                 extra_context=extra_context,
             )
     else:
-        logger.warning(u"Effect undefined: object id %s, state %s -> %s",
+        logger.info(u"Effect undefined: object id %s, state %s -> %s",
                 new_obj.id, old_state, new_state)
         return
