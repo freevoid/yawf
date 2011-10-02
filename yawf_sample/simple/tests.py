@@ -3,6 +3,7 @@ from django.test import TestCase
 import yawf
 import yawf.creation
 import yawf.dispatch
+from yawf.revision.models import Revision
 
 yawf.autodiscover()
 from .models import Window
@@ -83,6 +84,33 @@ class SimpleWorkflowTest(TestCase, WorkflowTestMixin):
         self.assertEqual(resized_window.height, 400)
 
         self.assertListEqual(effects, ['edit_effect', 'resize_effect'])
+
+    def test_revision_diff(self):
+        window, _ = self._new_window(width=500, height=300)
+        self.assertTrue(hasattr(window, 'revisions'))
+        self.assertEqual(window.revision, 2)
+
+        resized_window, _ = yawf.dispatch.dispatch(window, self.sender,
+            'edit__resize', dict(width=200, height=300))
+        self.assertEqual(resized_window.revision, 3)
+
+        self.assertEqual(resized_window.revisions.count(), 3)
+        old_rev = Revision.objects.get(revision=2)
+        new_rev = Revision.objects.get(revision=3)
+
+        diff_fields = list(new_rev.diff_fields(old_rev))
+        self.assertItemsEqual(diff_fields, ['width'])
+
+        diff = new_rev.diff(old_rev)
+        self.assertItemsEqual(diff,
+            [
+                {
+                    'field_name': 'width',
+                    'old': 500,
+                    'new': 200,
+                    'field_verbose_name': 'width'
+                },
+            ])
 
     def _new_window(self, title='Main window', width=500, height=300):
         window = yawf.creation.create(

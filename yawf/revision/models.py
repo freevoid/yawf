@@ -8,6 +8,7 @@ from yawf.config import (REVISION_ATTR, REVISION_CONTROLLED_MODELS,
     MESSAGE_LOG_ENABLED, REVISION_ENABLED)
 from yawf.base_model import WorkflowAwareModelBase
 from yawf.serialize_utils import serialize, deserialize
+from yawf.utils import model_diff_fields, model_diff
 from yawf.revision import RevisionModelMixin
 
 
@@ -28,8 +29,7 @@ class Revision(models.Model):
         message_log_record = models.ForeignKey('message_log.MessageLog',
             null=True, blank=True, related_name='affected_revisions')
 
-    @property
-    def deserialized(self):
+    def deserialize(self):
         return deserialize(self.serialized_fields)
 
     @classmethod
@@ -55,6 +55,36 @@ class Revision(models.Model):
                 is_created=is_created,
                 serialized_fields=serialize(clarified),
             )
+
+    def diff_fields(self, other):
+        # If content type doesn't match, we can't tell the difference
+        if self.content_type_id != other.content_type_id:
+            return None
+        is_new_full, new = self.deserialize()
+        is_old_full, old = other.deserialize()
+
+        if is_new_full and is_old_full:
+            return model_diff_fields(old.object, new.object)
+
+    def diff(self, other):
+        '''
+        Calculate (as possible) difference between two revisions.
+
+        :return:
+            List of dicts with keys:
+              * ``field_name'';
+              * ``field_verbose_name'';
+              * ``old'';
+              * ``new''.
+        '''
+        # If content type doesn't match, we can't tell the difference
+        if self.content_type_id != other.content_type_id:
+            return None
+        is_new_full, new = self.deserialize()
+        is_old_full, old = other.deserialize()
+
+        if is_new_full and is_old_full:
+            return model_diff(old.object, new.object)
 
     def __unicode__(self):
         return u'%s:%d:%d' % (self.content_type, self.object_id, self.revision)

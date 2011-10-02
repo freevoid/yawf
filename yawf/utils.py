@@ -1,3 +1,5 @@
+from itertools import ifilter
+from operator import attrgetter
 from functools import wraps, partial
 
 from yawf.config import STATE_TYPE_CONSTRAINT
@@ -102,3 +104,30 @@ def select_for_update(queryset):
     sql, params = queryset.query.get_compiler(queryset.db).as_sql()
     return queryset.model._default_manager.raw(sql.rstrip() + ' FOR UPDATE',
             params)
+
+
+def model_diff(instance1, instance2):
+    diff = []
+
+    # Check only editable fields in model
+    for field in ifilter(attrgetter('editable'), instance1._meta.fields):
+        field_name = field.name
+        value1 = getattr(instance1, field_name)
+        value2 = getattr(instance2, field_name)
+        if value1 != value2:
+            diff.append({'field_name': field_name,
+                    'field_verbose_name': field.verbose_name,
+                    'old': value1, 'new': value2})
+
+    return diff
+
+
+def model_diff_fields(instance1, instance2):
+    # Check only editable fields in model
+    for field in ifilter(attrgetter('editable'), instance1._meta.fields):
+
+        field_name = field.name
+        value1 = getattr(instance1, field_name)
+        value2 = getattr(instance2, field_name)
+        if value1 != value2:
+            yield field_name

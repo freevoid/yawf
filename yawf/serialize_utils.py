@@ -47,6 +47,6 @@ def deserialize(content):
     try:
         deserialized = serializers.deserialize("json", content).next()
     except FieldDoesNotExist:
-        deserialize_to_dict(content)
+        return False, deserialize_to_dict(content)
     else:
-        return deserialized
+        return True, deserialized
