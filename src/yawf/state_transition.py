@@ -35,12 +35,12 @@ def transactional_transition(workflow, obj, message, state_transition,
                 workflow, obj, message,
                 state_transition,
                 transactional_side_effect=False)
-        side_effect_result = perform_side_effect(
+        side_effect_result = list(perform_side_effect(
                 obj,
                 new_obj,
                 message=message,
                 workflow=workflow,
-                extra_context=extra_context)
+                extra_context=extra_context))
         return new_obj, transition_result, side_effect_result
 
 
@@ -91,12 +91,12 @@ def _transactional_transition(workflow, obj, message, state_transition,
 
     if transactional_side_effect:
         # perform side effect action defined for transition
-        side_effect_result = perform_side_effect(
+        side_effect_result = list(perform_side_effect(
                 obj,
                 locked_obj,
                 message=message,
                 workflow=workflow,
-                extra_context=extra_context)
+                extra_context=extra_context))
     else:
         side_effect_result = None
 
@@ -115,22 +115,23 @@ def perform_side_effect(old_obj, new_obj,
     old_state = getattr(old_obj, workflow.state_attr_name)
     new_state = getattr(new_obj, workflow.state_attr_name)
 
-    action = workflow.get_action(
+    actions = workflow.get_actions(
             old_state, new_state, message.id)
 
     if extra_context is None:
         extra_context = {}
 
-    if callable(action):
-        return action(
-            old_obj=old_obj,
-            obj=new_obj,
-            sender=message.sender,
-            params=message.params,
-            message_spec=message.spec,
-            extra_context=extra_context,
-        )
+    if actions:
+        for action in actions:
+            yield action(
+                old_obj=old_obj,
+                obj=new_obj,
+                sender=message.sender,
+                params=message.params,
+                message_spec=message.spec,
+                extra_context=extra_context,
+            )
     else:
         logger.warning(u"Action undefined: object id %s, state %s -> %s",
                 new_obj.id, old_state, new_state)
-        return None
+        return

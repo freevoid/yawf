@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+from itertools import ifilter
 
 from yawf.config import STATE_TYPE_CONSTRAINT, REVISION_ATTR,\
          TRANSACTIONAL_SIDE_EFFECT
@@ -33,10 +34,18 @@ def dispatch_message(obj, message, extra_context=None):
     message = clean_message_data(workflow, obj, message)
 
     current_state = getattr(obj, workflow.state_attr_name)
-    handler = workflow.get_handler(current_state, message.id)
+    handlers = workflow.library.get_handlers(current_state, message.id)
 
     # check permission for a sender
-    if not handler.permission_checker(obj, message.sender):
+    permitted_handlers = ifilter(
+        lambda handler: handler.permission_checker(obj, message.sender),
+        handlers)
+
+    try:
+        # NOTE: we will get permitted handler that was registered *first*,
+        # if there are more than one handler for that state,message
+        handler = permitted_handlers.next()
+    except StopIteration:
         raise PermissionDeniedError(obj, message)
 
     handler_result = apply(handler, (obj, message.sender), message.params)
@@ -60,7 +69,7 @@ def dispatch_message(obj, message, extra_context=None):
     else:
         raise WrongHandlerResultError(handler_result)
 
-    new_obj, transition_result, side_effect_result =\
+    new_obj, transition_result, side_effect_results =\
         transactional_transition(
             workflow, obj, message, state_transition,
             extra_context=extra_context,
@@ -78,4 +87,4 @@ def dispatch_message(obj, message, extra_context=None):
             transition_result=transition_result,
             new_revision=new_revision)
 
-    return new_obj, side_effect_result
+    return new_obj, side_effect_results

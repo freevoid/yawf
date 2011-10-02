@@ -294,8 +294,11 @@ class Library(object):
         return handlers
 
     def get_effect(self, from_state, to_state, message_id):
-        if not self._is_index_built:
-            self.rebuild_index()
+        effects = self.get_effects(from_state, to_state, message_id)
+        if effects:
+            return effects[0]
+
+    def get_effects(self, from_state, to_state, message_id):
 
         key = (from_state, to_state, message_id)
         return self._effect_index.get(key)
