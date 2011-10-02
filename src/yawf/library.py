@@ -374,12 +374,12 @@ class Library(object):
 
         return self._handler_index.iteritems()
 
-    def iter_actions(self):
+    def iter_effects(self):
 
         if not self._is_index_built:
             self.rebuild_index()
 
-        return self._action_index.iteritems()
+        return self._effect_index.iteritems()
 
     def _meta_register(self, reg_cls, registrator, message_id, **options):
 

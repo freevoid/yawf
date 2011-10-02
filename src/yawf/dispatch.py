@@ -15,7 +15,6 @@ from yawf.state_transition import transactional_transition
 logger = logging.getLogger(__name__)
 
 
-
 def dispatch(obj, sender, message_id, raw_params=None, extra_context=None):
     return dispatch_message(
             obj,
