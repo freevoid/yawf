@@ -86,5 +86,8 @@ YAWF_CONFIG = {
     'DYNAMIC_WORKFLOW_ENABLED': True,
     'MESSAGE_LOG_ENABLED': True,
     'REVISION_ENABLED': True,
+    'REVISION_CONTROLLED_MODELS': [
+        'simple.Window',
+        ],
     'USE_SELECT_FOR_UPDATE': False,
 }

@@ -1,5 +1,7 @@
 from django.db import models
 
+from yawf.revision import RevisionModelMixin
+
 
 class WINDOW_OPEN_STATUS:
 
@@ -11,7 +13,7 @@ class WINDOW_OPEN_STATUS:
     choices = zip(types, types)
 
 
-class Window(models.Model):
+class Window(RevisionModelMixin, models.Model):
 
     title = models.CharField(max_length=255)
     width = models.IntegerField()
