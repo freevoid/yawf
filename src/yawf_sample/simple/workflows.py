@@ -56,5 +56,3 @@ class ToNormal(SimpleStateTransition):
     message_id = 'to_normal'
     states_from = ['maximized', 'minimized']
     state_to = 'normal'
-
-simple_workflow._clean_deferred_chain()
