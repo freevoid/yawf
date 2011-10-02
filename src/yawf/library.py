@@ -364,6 +364,20 @@ class Library(object):
     def get_resource_checkers_by_state(self, state):
         return self._resource_checkers_index[state]
 
+    def iter_handlers(self):
+
+        if not self._is_index_built:
+            self.rebuild_index()
+
+        return self._handler_index.iteritems()
+
+    def iter_actions(self):
+
+        if not self._is_index_built:
+            self.rebuild_index()
+
+        return self._action_index.iteritems()
+
     def _meta_register(self, reg_cls, registrator, message_id, **options):
 
         if inspect.isclass(message_id) and\
