@@ -17,6 +17,8 @@ class Window(models.Model):
     width = models.IntegerField()
     height = models.IntegerField()
 
+    workflow_type = 'simple'
+
     open_status = models.CharField(
         max_length=32,
         choices=WINDOW_OPEN_STATUS.choices,

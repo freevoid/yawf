@@ -5,6 +5,7 @@ import yawf.creation
 import yawf.dispatch
 
 yawf.autodiscover()
+from .models import Window
 
 
 class WorkflowTestMixin(object):
@@ -63,7 +64,32 @@ class SimpleWorkflowTest(TestCase, WorkflowTestMixin):
                 'width': 500,
                 'height': 300,
             })
-
         new_instance, side_effect = yawf.creation.start_workflow(window, self.sender)
         self.assertEqual(window.id, new_instance.id)
         self.assertFalse(window is new_instance)
+
+    def test_grouped_action(self):
+        window, _ = self._new_window(width=500, height=300)
+        self.assertEqual(window.width, 500)
+        self.assertEqual(window.height, 300)
+
+        resized_window, effects = yawf.dispatch.dispatch(window, self.sender,
+            'edit__resize', dict(width=200, height=400))
+        self.assertEqual(resized_window.width, 200)
+        self.assertEqual(resized_window.height, 400)
+
+        resized_window = Window.objects.get(id=window.id)
+        self.assertEqual(resized_window.width, 200)
+        self.assertEqual(resized_window.height, 400)
+
+        self.assertListEqual(effects, ['edit_effect', 'resize_effect'])
+
+    def _new_window(self, title='Main window', width=500, height=300):
+        window = yawf.creation.create(
+            self.workflow_id, self.sender,
+            {
+                'title': title,
+                'width': width,
+                'height': height,
+            })
+        return yawf.creation.start_workflow(window, self.sender)
