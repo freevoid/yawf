@@ -115,7 +115,7 @@ def perform_side_effect(old_obj, new_obj,
     old_state = getattr(old_obj, workflow.state_attr_name)
     new_state = getattr(new_obj, workflow.state_attr_name)
 
-    actions = workflow.get_actions(
+    actions = workflow.library.get_actions(
             old_state, new_state, message.id)
 
     if extra_context is None:
