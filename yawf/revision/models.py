@@ -76,7 +76,7 @@ def setup_handlers(dotted_list=REVISION_CONTROLLED_MODELS):
         model_cls = models.get_model(app_label, model_name)
 
         if not issubclass(model_cls, RevisionModelMixin):
-            warnings.warning(
+            warnings.warn(
                 "You should base model %s on RevisionModelMixin in order to control"
                 " its revisions" % dotted_cls)
         models.signals.post_save.connect(log_revision, sender=model_cls)
