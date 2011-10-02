@@ -40,6 +40,12 @@ class PermissionsTestCase(TestCase):
         self.assertFalse(sender_is_even(None, 3))
         self.assertTrue(sender_is_even(None, 4))
 
+    def test_inversion_invariance(self):
+        sender_is_even = C(self.sender_is_even)
+        sender_is_odd = ~sender_is_even
+        sender_is_even_again = ~sender_is_odd
+        self.assertTrue(sender_is_even is sender_is_even_again)
+
     def test_checker_expressions(self):
         complex_checker = self.complex_checker
         self.assertTrue(complex_checker(2, 2))
@@ -85,3 +91,18 @@ class PermissionsTestCase(TestCase):
         self.assertTrue(self.sender_is_even in cache)
         self.assertTrue(self.obj_is_even in cache)
         self.assertTrue(allower in cache)
+
+    def test_cyclic(self):
+        or_checker = C(self.sender_is_even) | C(self.obj_is_even)
+        atom_checkers = list(or_checker.get_atomical_checkers())
+        or_checker |= or_checker
+        self.assertListEqual(
+            atom_checkers,
+            list(or_checker.get_atomical_checkers()))
+
+        and_checker = C(self.sender_is_even, self.obj_is_even)
+        and_checker &= and_checker
+        atom_checkers = list(and_checker.get_atomical_checkers())
+        self.assertListEqual(
+            atom_checkers,
+            list(and_checker.get_atomical_checkers()))

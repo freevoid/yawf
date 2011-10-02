@@ -6,5 +6,6 @@ test:
 	$(MANAGE_PY) test yawf simple
 
 coverage_test:
+	coverage erase
 	coverage run $(MANAGE_PY) test yawf simple
 	coverage html

@@ -39,7 +39,11 @@ class MessageSpecsTestCase(TestCase):
             id = 'test'
             validator_cls = CustomValidator
 
-        Spec.validator_cls
+        v = Spec.validator_cls({})
+        self.assertTrue(v.is_valid())
+        self.assertItemsEqual(
+            v.cleaned_data,
+            {'buz': 'fuz'})
 
         class Spec2(Spec):
 
@@ -49,6 +53,7 @@ class MessageSpecsTestCase(TestCase):
                 cleaned_data = {'foo': 'bar'}
 
         v = Spec2.validator_cls({})
+        self.assertTrue(v.is_valid())
         self.assertItemsEqual(
             v.cleaned_data,
             {'foo': 'bar'})
