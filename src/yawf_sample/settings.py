@@ -35,7 +35,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
     'yawf',
     'yawf.message_log',
     'yawf.revision',
@@ -59,6 +58,10 @@ LOGGING = {
         }
     },
     'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
@@ -71,6 +74,11 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        'yawf': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': True,
+        }
     }
 }
 
