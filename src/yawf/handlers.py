@@ -73,14 +73,14 @@ class Handler(object):
         assert callable(self.permission_checker)
 
     def __call__(self, obj, sender, **kwargs):
-        return self.handle(obj, sender, **kwargs)
+        return self.perform(obj, sender, **kwargs)
 
-    def handle(self, obj, sender, **kwargs):
+    def perform(self, obj, sender, **kwargs):
         logger.warning("Message ignored (by default)")
         return None
 
-    def set_handler(self, handle_func):
-        self.handle = lambda obj, sender, **kwargs:\
+    def set_performer(self, handle_func):
+        self.perform = lambda obj, sender, **kwargs:\
             handle_func(obj, sender, **kwargs)
 
 
@@ -93,5 +93,5 @@ class SimpleStateTransition(Handler):
         self.is_annotated = True
         super(SimpleStateTransition, self).__init__(*args, **kwargs)
 
-    def handle(self, obj, sender, **kwargs):
+    def perform(self, obj, sender, **kwargs):
         return self.state_to
