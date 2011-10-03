@@ -2,6 +2,8 @@
 build/
 .ropeproject
 *.egg-info
+.coverage
+coverage_html
 # debian-related
 debian/files
 debian/*.debhelper.log
