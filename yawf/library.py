@@ -66,13 +66,24 @@ class Library(object):
         super(Library, self).__init__()
 
     @classmethod
-    def proxy_library(cls, *bases):
+    def proxy_library(cls, base, *bases):
 
         self = cls()
         for container_name, container_fabric in self._containers:
-            setattr(self, container_name,
-                    merge_container(container_name, container_fabric,
-                        getattr(cls, container_name)))
+
+            merged_container = merge_container(
+                container_name,
+                container_fabric,
+                getattr(base, container_name))
+
+            for extra_base in bases:
+                merged_container = merge_container(
+                    container_name,
+                    lambda: merged_container,
+                    getattr(extra_base, container_name))
+
+            setattr(self, container_name, merged_container)
+
         return self
 
     def message(self, message_spec):
@@ -441,10 +452,9 @@ class Library(object):
                 raise GroupPathEmptyError(group_path)
         return map(attrgetter('id'), cur_level.itervalues())
 
-    @classmethod
-    def _init_containers(cls):
-        for container_name, container_fabric in cls._containers:
-            setattr(cls, container_name, container_fabric())
+    def _init_containers(self):
+        for container_name, container_fabric in self._containers:
+            setattr(self, container_name, container_fabric())
 
     def _init_index_containers(self):
         for container_name, container_fabric in self._index_containers:

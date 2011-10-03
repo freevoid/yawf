@@ -77,8 +77,6 @@ class WorkflowBase(object):
     # message id or callable that returns message context to start workflow
     start_workflow = DEFAULT_START_MESSAGE
 
-    _library = Library()
-
     @property
     def extra_valid_states(self):
         warnings.warn(
@@ -106,6 +104,9 @@ class WorkflowBase(object):
 
         if inherit_behaviour:
             self._library = Library.proxy_library(self._library)
+        else:
+            self._library = Library()
+
         self._library.default_permission_checker = self.default_permission_checker
         self._library.states = self.states
         self._library.valid_states = self._valid_states

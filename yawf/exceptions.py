@@ -25,7 +25,7 @@ class UnhandledMessageError(YawfException):
 
     @property
     def context(self):
-        return {'unhandled': self.args[0], 'valid': self.args[1]}
+        return {'unhandled': self.args[0]}
 
 
 class WrongHandlerResultError(YawfException):

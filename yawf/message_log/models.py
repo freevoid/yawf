@@ -9,6 +9,7 @@ from yawf import serialize_utils as json
 from yawf.revision.models import Revision
 from yawf.config import MESSAGE_LOG_ENABLED
 from yawf.signals import message_handled
+from yawf.utils import memoizible_property
 
 
 class MessageLog(models.Model):
@@ -42,6 +43,14 @@ class MessageLog(models.Model):
 
     workflow_id = models.CharField(max_length=64, db_index=True, default='')
     parent_id = models.ForeignKey('self', blank=True, null=True)
+
+    @memoizible_property
+    def deserialized_params(self):
+        return json.loads(self.message_params)
+
+    @staticmethod
+    def serialize_params(params):
+        return json.dumps(params)
 
 
 def log_message(sender, **kwargs):
@@ -84,7 +93,7 @@ def log_message(sender, **kwargs):
 
     create_dict = dict(
         message=message.id,
-        message_params=json.dumps(message.params),
+        message_params=MessageLog.serialize_params(message.params),
         workflow_id=sender,
         revision_before=revision,
         revision_after=new_revision,
