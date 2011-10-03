@@ -375,7 +375,7 @@ class Library(object):
             registrator(message_id)
             return message_id
 
-        def registrator(func):
+        def _registrator(func):
 
             if message_id is None:
                 _message_id = func.__name__
@@ -390,7 +390,7 @@ class Library(object):
             registrator(obj)
             return func
 
-        return registrator
+        return _registrator
 
     def _register_handler_obj(self, handler):
 
