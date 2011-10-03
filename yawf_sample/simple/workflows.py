@@ -68,12 +68,9 @@ class ToMaximized(SimpleStateTransition):
     states_from = ['normal', 'minimized']
     state_to = 'maximized'
 
-@simple_workflow.register_handler
-class ToNormal(SimpleStateTransition):
-
-    message_id = 'to_normal'
-    states_from = ['maximized', 'minimized']
-    state_to = 'normal'
+@simple_workflow.register_handler(states_from=['maximized', 'minimized'])
+def to_normal(obj, sender):
+    return 'normal'
 
 @simple_workflow.register_handler
 class Edit(Handler):
