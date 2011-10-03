@@ -14,6 +14,8 @@ DATABASES = {
     }
 }
 
+SITE_ID = 1
+
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'ufq^a%n=9#nbs(_p09c5gvqt(f-7td3$h8tmfbl)(1o9p)226u'
 
