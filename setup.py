@@ -19,7 +19,7 @@ setup(
     name = PACKAGE_NAME,
     version = __version__,
     package_dir = {'': PACKAGE_ROOT},
-    packages = find_packages(PACKAGE_ROOT),
+    packages = find_packages(PACKAGE_ROOT, exclude=('yawf_sample', 'yawf_sample.*')),
     package_data = {'': data_files},
 
     # Metadata
