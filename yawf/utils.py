@@ -1,6 +1,8 @@
 from itertools import ifilter
+from collections import defaultdict, Iterable
 from operator import attrgetter
 from functools import wraps, partial
+import types
 
 from yawf.config import STATE_TYPE_CONSTRAINT
 from yawf import get_workflow_by_instance
@@ -131,3 +133,35 @@ def model_diff_fields(instance1, instance2):
         value2 = getattr(instance2, field_name)
         if value1 != value2:
             yield field_name
+
+
+def memoizible_property(getter):
+
+    key = '_cache_prop_' + getter.__name__
+
+    def getter_wrapper(self, *args, **kwargs):
+
+        if not hasattr(self, key):
+            result = getter(self, *args, **kwargs)
+            if isinstance(result, types.GeneratorType):
+                result = list(result)
+            setattr(self, key, result)
+            return result
+        return getattr(self, key)
+
+    return property(getter_wrapper)
+
+
+def maybe_list(a):
+
+    if a is not None:
+        if isinstance(a, basestring) or not isinstance(a, Iterable):
+            return [a]
+        else:
+            return list(a)
+    else:
+        return []
+
+
+def metadefaultdict(fabric):
+    return lambda: defaultdict(fabric)

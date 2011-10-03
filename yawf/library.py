@@ -1,12 +1,9 @@
 import collections
-from collections import defaultdict
 import inspect
 from operator import attrgetter
 
 from django.utils.datastructures import MergeDict
 
-from yawf.config import INITIAL_STATE, DEFAULT_START_MESSAGE
-from yawf import permissions
 from yawf.effects import SideEffect
 from yawf.handlers import Handler
 from yawf.resources import WorkflowResource
@@ -18,21 +15,7 @@ from yawf.exceptions import (
 )
 from yawf.messages.spec import MessageSpec
 from yawf.permissions import OrChecker
-
-
-def maybe_list(a):
-
-    if a is not None:
-        if isinstance(a, basestring) or not isinstance(a, collections.Iterable):
-            return [a]
-        else:
-            return list(a)
-    else:
-        return []
-
-
-def metadefaultdict(fabric):
-    return lambda: defaultdict(fabric)
+from yawf.utils import metadefaultdict, maybe_list
 
 
 def merge_container(container_name, container_fabric, parent_container):
