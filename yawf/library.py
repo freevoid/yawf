@@ -1,5 +1,6 @@
 import collections
 import inspect
+from functools import wraps
 from operator import attrgetter
 
 from django.utils.datastructures import MergeDict
@@ -22,7 +23,7 @@ def merge_container(container_name, container_fabric, parent_container):
 
     # XXX: need to test before extensive use
 
-    if issubclass(container_fabric, dict):
+    if inspect.isclass(container_fabric) and issubclass(container_fabric, dict):
         basic_container = container_fabric()
         if container_name == '_message_specs':
             class NewMergeDict(MergeDict):
@@ -37,6 +38,16 @@ def merge_container(container_name, container_fabric, parent_container):
         return parent_container
 
 
+def touches_index(method):
+
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        if not self._is_index_built:
+            self.rebuild_index()
+        return method(self, *args, **kwargs)
+
+    return wrapper
+
 
 class Library(object):
 
@@ -49,6 +60,7 @@ class Library(object):
         ('_message_groups', dict),
         ('_handler_patterns', list),
         ('_effect_patterns', list),
+        ('_resource_checkers_index', metadefaultdict(set)),
     )
 
     _index_containers = (
@@ -56,7 +68,6 @@ class Library(object):
         ('_handler_message_index', metadefaultdict(metadefaultdict(list))),
         ('_handler_state_index', metadefaultdict(metadefaultdict(list))),
         ('_message_checkers_index', metadefaultdict(set)),
-        ('_resource_checkers_index', metadefaultdict(set)),
         ('_effect_index', metadefaultdict(list)),
         ('_possible_effect_index', metadefaultdict(list)),
     )
@@ -258,6 +269,7 @@ class Library(object):
     def get_handler(self, state, message_id):
         return self.get_handlers(state, message_id)[0]
 
+    @touches_index
     def get_handlers(self, state, message_id):
         '''
         Return Handler instances to handle ``message_id'' for workflow in state
@@ -271,9 +283,6 @@ class Library(object):
         If there are no handler for this message_id, raises
         UnhandledMessageError(message_id).
         '''
-        if not self._is_index_built:
-            self.rebuild_index()
-
         key = (state, message_id)
         handlers = self._handler_index.get(key)
 
@@ -292,11 +301,12 @@ class Library(object):
         if effects:
             return effects[0]
 
+    @touches_index
     def get_effects(self, from_state, to_state, message_id):
-
         key = (from_state, to_state, message_id)
         return self._effect_index.get(key)
 
+    @touches_index
     def get_possible_effects(self, from_state, message_id):
         return self._possible_effect_index.get((from_state, message_id)) or []
 
@@ -355,24 +365,19 @@ class Library(object):
         return self.get_message_checkers_by_state(state)\
                 .union(self.get_resource_checkers_by_state(state))
 
+    @touches_index
     def get_message_checkers_by_state(self, state):
         return self._message_checkers_index[state]
 
     def get_resource_checkers_by_state(self, state):
         return self._resource_checkers_index[state]
 
+    @touches_index
     def iter_handlers(self):
-
-        if not self._is_index_built:
-            self.rebuild_index()
-
         return self._handler_index.iteritems()
 
+    @touches_index
     def iter_effects(self):
-
-        if not self._is_index_built:
-            self.rebuild_index()
-
         return self._effect_index.iteritems()
 
     def _meta_register(self, reg_cls, registrator, message_id, **options):
