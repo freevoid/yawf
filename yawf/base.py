@@ -42,6 +42,8 @@ class WorkflowMeta(type):
             warnings.warn(
                 'Use of extra_valid_states is DEPRECATED. Change your code to use states instead.',
                 DeprecationWarning)
+
+        attrs['_library'] = Library()
         return super(WorkflowMeta, cls).__new__(cls, name, bases, attrs)
 
 
@@ -104,8 +106,6 @@ class WorkflowBase(object):
 
         if inherit_behaviour:
             self._library = Library.proxy_library(self._library)
-        else:
-            self._library = Library()
 
         self._library.default_permission_checker = self.default_permission_checker
         self._library.states = self.states
@@ -129,7 +129,7 @@ class WorkflowBase(object):
     def library(self):
         return self._library
 
-    register_action = proxy_method('_library', 'effect')
+    register_action = register_action_obj = proxy_method('_library', 'effect')
     register_handler = proxy_method('_library', 'handler')
     register_message = proxy_method('_library', 'message')
     register_resource = proxy_method('_library', 'resource')
