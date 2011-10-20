@@ -4,6 +4,7 @@ import yawf
 import yawf.creation
 import yawf.dispatch
 from yawf.revision.models import Revision
+from yawf.allowed import get_allowed
 
 yawf.autodiscover()
 from .models import Window
@@ -111,6 +112,11 @@ class SimpleWorkflowTest(TestCase, WorkflowTestMixin):
                     'field_verbose_name': 'width'
                 },
             ])
+
+    def test_allowed(self):
+        window, _ = self._new_window()
+        allowed = get_allowed(self.sender, window)
+        self.assertItemsEqual(allowed.keys(), ['allowed_messages', 'allowed_resources'])
 
     def _new_window(self, title='Main window', width=500, height=300):
         window = yawf.creation.create(
