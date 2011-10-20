@@ -34,6 +34,7 @@ class Handler(object):
     permission_checker = None
     defer = True
     replace_if_exists = False
+    copy_before_call = False
 
     def __init__(self, message_id=None, states_from=None,
             message_group=None,

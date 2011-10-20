@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import copy
 from itertools import ifilter
 
 from yawf.config import STATE_TYPE_CONSTRAINT, REVISION_ATTR,\
@@ -47,6 +48,8 @@ def dispatch_message(obj, message, extra_context=None):
     except StopIteration:
         raise PermissionDeniedError(obj, message)
 
+    if handler.copy_before_call:
+        handler = copy.deepcopy(handler)
     handler_result = apply(handler, (obj, message.sender), message.params)
 
     # if handler returns None - do nothing
