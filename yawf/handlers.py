@@ -17,16 +17,13 @@ class Handler(object):
 
     If handler returns a callable, then this callable applies as transaction
     on object (to change its extended state). The result of the latter
-    callable represents affected instances. If callable returns generator,
-    transition routine will coerce it to list to get those affected
-    instances.
+    callable represents a transition result. If callable returns generator,
+    transition routine will iterate over it, collecting the yielded values.
+    For more information about state transition, see
+    :py:mod:`yawf.state_transition` module.
 
-    Transitioning callable is not always must return generator or iterable.
-
-    It can return None if nothing but the workflow object is affected.
-    It can also return whatever it wants, but in this case one must avoid
-    using the builtin mechanisms for message logging or make a custom
-    signal handler for this purpose.
+    Transitioning callable can actually return anything besides generator.
+    That is totally an application designer business.
     '''
     message_id = None
     message_group = None
