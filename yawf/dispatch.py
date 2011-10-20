@@ -23,15 +23,7 @@ def dispatch(obj, sender, message_id, raw_params=None, extra_context=None):
             extra_context=extra_context)
 
 
-def dispatch_message(obj, message, extra_context=None):
-    logger.info(u"Backend got message from %s to %s: %s %s",
-            message.sender, obj, message.id, message.raw_params)
-
-    # can raise WorkflowNotLoadedError
-    workflow = get_workflow_by_instance(obj)
-
-    # validate data and filter out trash
-    message = clean_message_data(workflow, obj, message)
+def get_handler(workflow, message, obj):
 
     current_state = getattr(obj, workflow.state_attr_name)
     handlers = workflow.library.get_handlers(current_state, message.id)
@@ -47,9 +39,26 @@ def dispatch_message(obj, message, extra_context=None):
         handler = permitted_handlers.next()
     except StopIteration:
         raise PermissionDeniedError(obj, message)
+    else:
+        if handler.copy_before_call:
+            handler = copy.deepcopy(handler)
+        return handler
 
-    if handler.copy_before_call:
-        handler = copy.deepcopy(handler)
+
+def dispatch_message(obj, message, extra_context=None):
+    logger.info(u"Backend got message from %s to %s: %s %s",
+            message.sender, obj, message.id, message.raw_params)
+
+    # can raise WorkflowNotLoadedError
+    workflow = get_workflow_by_instance(obj)
+
+    # validate data and filter out trash
+    message = clean_message_data(workflow, obj, message)
+
+    # find a transition handler
+    handler = get_handler(workflow, message, obj)
+
+    # fetch a transition
     handler_result = apply(handler, (obj, message.sender), message.params)
 
     # if handler returns None - do nothing
@@ -59,10 +68,10 @@ def dispatch_message(obj, message, extra_context=None):
     # if handler returns type appropriate for state (string) - change state
     if isinstance(handler_result, STATE_TYPE_CONSTRAINT):
         if workflow.is_valid_state(handler_result):
-            def state_transition(clarified):
-                setattr(clarified, workflow.state_attr_name, handler_result)
-                clarified.save()
-                return clarified
+            def state_transition(obj):
+                setattr(obj, workflow.state_attr_name, handler_result)
+                obj.save()
+                return obj
         else:
             raise IllegalStateError(handler_result)
     # if handler returns callable, perform it as single transaction
