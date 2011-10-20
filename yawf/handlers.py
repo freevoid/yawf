@@ -96,3 +96,12 @@ class SimpleStateTransition(Handler):
 
     def perform(self, obj, sender, **kwargs):
         return self.state_to
+
+
+class ComplexStateTransition(Handler):
+
+    def transition(self, obj, sender, **kwargs):
+        raise NotImplementedError
+
+    def perform(self, obj, sender, **kwargs):
+        return lambda obj: self.transition(obj, sender, **kwargs)
