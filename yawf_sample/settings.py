@@ -39,8 +39,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'yawf',
     'yawf.message_log',
-    'yawf.revision',
     'yawf_sample.simple',
+    'reversion',
     'south',
     'django.contrib.admin',
 )
@@ -87,9 +87,7 @@ LOGGING = {
 YAWF_CONFIG = {
     'DYNAMIC_WORKFLOW_ENABLED': True,
     'MESSAGE_LOG_ENABLED': True,
-    'REVISION_ENABLED': True,
-    'REVISION_CONTROLLED_MODELS': [
-        'simple.Window',
-        ],
     'USE_SELECT_FOR_UPDATE': False,
 }
+
+SOUTH_TESTS_MIGRATE = False
