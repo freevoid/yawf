@@ -7,8 +7,6 @@ DEFAULT_CONFIG = {
     'DEFAULT_START_MESSAGE': 'start_workflow',
     'SOFT_DELETE_ATTR': None,
     'REVISION_ATTR': 'revision',
-    'REVISION_ENABLED': False,
-    'REVISION_CONTROLLED_MODELS': (),
     'MESSAGE_LOG_ENABLED': False,
     'TRANSACTIONAL_SIDE_EFFECT': True,
     'USE_SELECT_FOR_UPDATE': True,
