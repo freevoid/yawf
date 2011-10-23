@@ -64,7 +64,9 @@ class MessageIgnored(YawfException):
 
     @property
     def context(self):
-        return {"message_id": self.args[0], "message_params": self.args[1]}
+        message = self.args[0]
+        return {"message_id": message.id,
+                "message_params": message.params}
 
 
 class NoAvailableMessagesError(YawfException):
