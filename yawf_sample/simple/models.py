@@ -1,5 +1,6 @@
 from django.db import models
 
+import reversion
 from yawf.revision import RevisionModelMixin
 
 
@@ -13,6 +14,7 @@ class WINDOW_OPEN_STATUS:
     choices = zip(types, types)
 
 
+@reversion.register
 class Window(RevisionModelMixin, models.Model):
 
     title = models.CharField(max_length=255)

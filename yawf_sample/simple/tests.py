@@ -1,9 +1,10 @@
 from django.test import TestCase
+import reversion
 
 import yawf
 import yawf.creation
 import yawf.dispatch
-from yawf.revision.models import Revision
+from yawf.revision.utils import diff_fields, versions_diff
 from yawf.allowed import get_allowed
 
 yawf.autodiscover()
@@ -66,16 +67,16 @@ class SimpleWorkflowTest(TestCase, WorkflowTestMixin):
                 'width': 500,
                 'height': 300,
             })
-        new_instance, side_effect = yawf.creation.start_workflow(window, self.sender)
+        new_instance, handler_effect, side_effect = yawf.creation.start_workflow(window, self.sender)
         self.assertEqual(window.id, new_instance.id)
         self.assertFalse(window is new_instance)
 
     def test_grouped_action(self):
-        window, _ = self._new_window(width=500, height=300)
+        window, _, _ = self._new_window(width=500, height=300)
         self.assertEqual(window.width, 500)
         self.assertEqual(window.height, 300)
 
-        resized_window, effects = yawf.dispatch.dispatch(window, self.sender,
+        resized_window, handler_effects, effects = yawf.dispatch.dispatch(window, self.sender,
             'edit__resize', dict(width=200, height=400))
         self.assertEqual(resized_window.width, 200)
         self.assertEqual(resized_window.height, 400)
@@ -87,22 +88,22 @@ class SimpleWorkflowTest(TestCase, WorkflowTestMixin):
         self.assertListEqual(effects, ['edit_effect', 'resize_effect'])
 
     def test_revision_diff(self):
-        window, _ = self._new_window(width=500, height=300)
-        self.assertTrue(hasattr(window, 'revisions'))
+        window, _, _ = self._new_window(width=500, height=300)
         self.assertEqual(window.revision, 2)
 
-        resized_window, _ = yawf.dispatch.dispatch(window, self.sender,
+        resized_window, _, _ = yawf.dispatch.dispatch(window, self.sender,
             'edit__resize', dict(width=200, height=300))
         self.assertEqual(resized_window.revision, 3)
 
-        self.assertEqual(resized_window.revisions.count(), 3)
-        old_rev = Revision.objects.get(revision=2)
-        new_rev = Revision.objects.get(revision=3)
+        versions = reversion.get_for_object(window)
+        self.assertEqual(len(versions), 2)
+        new_rev = versions[0]
+        old_rev = versions[1]
 
-        diff_fields = list(new_rev.diff_fields(old_rev))
-        self.assertItemsEqual(diff_fields, ['width'])
+        diff = list(diff_fields(old_rev, new_rev))
+        self.assertItemsEqual(diff, ['width'])
 
-        diff = new_rev.diff(old_rev)
+        diff = versions_diff(old_rev, new_rev)
         self.assertItemsEqual(diff,
             [
                 {
@@ -114,7 +115,7 @@ class SimpleWorkflowTest(TestCase, WorkflowTestMixin):
             ])
 
     def test_allowed(self):
-        window, _ = self._new_window()
+        window, _, _ = self._new_window()
         allowed = get_allowed(self.sender, window)
         self.assertItemsEqual(allowed.keys(), ['allowed_messages', 'allowed_resources'])
 
