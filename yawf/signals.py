@@ -6,7 +6,6 @@ message_handled = Signal(
         'message',
         'instance',
         'new_instance',
-        'new_revision',
         'transition_result'
     ])
 
@@ -16,6 +15,5 @@ transition_handled = Signal(
         'message',
         'instance',
         'new_instance',
-        'new_revision',
         'transition_result'
     ])
