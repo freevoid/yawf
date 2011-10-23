@@ -1,7 +1,5 @@
 import uuid
 
-from yawf.messages.cleaning import clean_message_data
-
 
 class Message(object):
 
@@ -27,3 +25,7 @@ class Message(object):
         if not self._unique_id:
             self._unique_id = uuid.uuid1()
         return self._unique_id
+
+
+from .cleaning import clean_message_data
+from .submessage import Submessage
