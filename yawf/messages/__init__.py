@@ -27,7 +27,5 @@ class Message(object):
         return self._unique_id
 
 
-print "PRE"
 from .cleaning import clean_message_data
 from .submessage import Submessage
-print "POST"
