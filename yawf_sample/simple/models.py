@@ -14,7 +14,6 @@ class WINDOW_OPEN_STATUS:
     choices = zip(types, types)
 
 
-@reversion.register
 class Window(RevisionModelMixin, models.Model):
 
     title = models.CharField(max_length=255)
@@ -28,3 +27,5 @@ class Window(RevisionModelMixin, models.Model):
         choices=WINDOW_OPEN_STATUS.choices,
         default='init',
         editable=False)
+
+reversion.register(Window)
