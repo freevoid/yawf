@@ -4,7 +4,7 @@ class Submessage(object):
 
     need_lock_object = True
 
-    def __init__(self, obj, message_id, sender, raw_params, need_lock_object=True):
+    def __init__(self, obj, message_id, sender, raw_params=None, need_lock_object=True):
         self.obj = obj
         self.sender = sender
         self.message_id = message_id
@@ -31,7 +31,7 @@ class Submessage(object):
 
 class RecursiveSubmessage(Submessage):
 
-    def __init__(self, message_id, sender, raw_params):
+    def __init__(self, message_id, sender, raw_params=None):
         super(RecursiveSubmessage, self).__init__(
             obj=None,
             sender=sender, message_id=message_id, raw_params=raw_params)
