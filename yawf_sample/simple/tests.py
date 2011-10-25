@@ -4,11 +4,13 @@ import reversion
 import yawf
 import yawf.creation
 import yawf.dispatch
-from yawf.revision.utils import diff_fields, versions_diff
+from yawf.revision.utils import (
+    diff_fields, versions_diff, deserialize_revision, previous_version)
+from yawf.message_log.models import main_record_for_revision
 from yawf.allowed import get_allowed
 
 yawf.autodiscover()
-from .models import Window
+from .models import Window, WINDOW_OPEN_STATUS
 
 
 class WorkflowTestMixin(object):
@@ -87,6 +89,62 @@ class SimpleWorkflowTest(TestCase, WorkflowTestMixin):
 
         self.assertListEqual(effects, ['edit_effect', 'resize_effect'])
 
+    def test_multimessage(self):
+        window, _, _ = self._new_window(width=500, height=300)
+        child1, _, _ = self._new_window(parent=window)
+        child2, _, _ = self._new_window(parent=window)
+
+        window, handler_effects, _ = yawf.dispatch.dispatch(
+                            window, self.sender, 'minimize_all')
+
+        self.assertTrue(isinstance(handler_effects, list))
+        self.assertEqual(len(handler_effects), 3)
+        window, child1, child2 = handler_effects
+        self.assertEqual(window.open_status, WINDOW_OPEN_STATUS.MINIMIZED)
+        self.assertEqual(child1.open_status, WINDOW_OPEN_STATUS.MINIMIZED)
+        self.assertEqual(child2.open_status, WINDOW_OPEN_STATUS.MINIMIZED)
+
+    def test_revision_deserialization(self):
+        window, _, _ = self._new_window(width=500, height=300)
+        self.assertEqual(window.revision, 2)
+
+        child1, _, _ = self._new_window(parent=window)
+        child2, _, _ = self._new_window(parent=window)
+
+        window, _, _ = yawf.dispatch.dispatch(
+                            window, self.sender, 'minimize_all')
+
+        versions = reversion.get_for_object(window)
+        self.assertEqual(len(versions), 2)
+        last_version = versions[0]
+        message_revision = last_version.revision
+
+        # checking log record
+        log_record = main_record_for_revision(message_revision)
+        self.assertEqual(log_record.message, 'minimize_all')
+        self.assertEqual(log_record.object_id, window.id)
+
+        # checking revision
+        rev = deserialize_revision(message_revision)
+        version = rev.get_version_for_record(log_record)
+        self.assertEqual(last_version, version)
+        previous = previous_version(version)
+        diff = versions_diff(previous, version, full=True)
+        self.assertItemsEqual(diff[0],
+            {
+                'field_name': 'open_status',
+                'old': 'normal',
+                'new': 'minimized',
+                'field_verbose_name': 'open status'
+            })
+        self.assertItemsEqual(diff[1],
+            {
+                'field_name': 'revision',
+                'old': '2',
+                'new': '3',
+                'field_verbose_name': 'revision'
+            })
+
     def test_revision_diff(self):
         window, _, _ = self._new_window(width=500, height=300)
         self.assertEqual(window.revision, 2)
@@ -119,13 +177,15 @@ class SimpleWorkflowTest(TestCase, WorkflowTestMixin):
         allowed = get_allowed(self.sender, window)
         self.assertItemsEqual(allowed.keys(), ['allowed_messages', 'allowed_resources'])
 
-    def _new_window(self, title='Main window', width=500, height=300):
+    def _new_window(self, title='Main window', width=500, height=300,
+            parent=None):
         window = yawf.creation.create(
             self.workflow_id, self.sender,
             {
                 'title': title,
                 'width': width,
                 'height': height,
+                'parent': parent.id if parent is not None else None,
             })
         return yawf.creation.start_workflow(window, self.sender)
 

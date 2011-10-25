@@ -2,9 +2,10 @@ from django import forms
 
 from yawf.base import WorkflowBase
 from yawf.messages.common import message_spec_fabric, BasicStartMessage, MessageSpec
+from yawf.messages.submessage import Submessage, RecursiveSubmessage
 
 from yawf.actions import SideEffect
-from yawf.handlers import SimpleStateTransition, Handler
+from yawf.handlers import SimpleStateTransition, Handler, ComplexStateTransition
 from yawf.utils import make_common_updater
 from .models import Window, WINDOW_OPEN_STATUS
 
@@ -45,6 +46,7 @@ class ResizeMessage(MessageSpec):
 
 simple_workflow.register_message(message_spec_fabric(id='minimize', verb='Minimize window'))
 simple_workflow.register_message(message_spec_fabric(id='maximize'))
+simple_workflow.register_message(message_spec_fabric(id='minimize_all'))
 simple_workflow.register_message(BasicStartMessage)
 
 @simple_workflow.register_handler
@@ -67,6 +69,18 @@ class ToMaximized(SimpleStateTransition):
     message_id = 'maximize'
     states_from = ['normal', 'minimized']
     state_to = 'maximized'
+
+#NOTE: example of complex state transition
+@simple_workflow.register_handler
+class MinimizeAll(ComplexStateTransition):
+
+    message_id = 'minimize_all'
+    states_from = ['normal', 'maximized']
+
+    def transition(self, obj, sender):
+        yield (yield RecursiveSubmessage('minimize', sender))
+        for child_window in obj.children.all():
+            yield (yield Submessage(child_window, 'minimize', sender))
 
 @simple_workflow.register_handler(states_from=['maximized', 'minimized'])
 def to_normal(obj, sender):

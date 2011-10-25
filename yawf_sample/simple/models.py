@@ -19,6 +19,8 @@ class Window(RevisionModelMixin, models.Model):
     title = models.CharField(max_length=255)
     width = models.IntegerField()
     height = models.IntegerField()
+    parent = models.ForeignKey('self', related_name='children',
+            null=True, blank=True)
 
     workflow_type = 'simple'
 
