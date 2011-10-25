@@ -80,3 +80,7 @@ def log_record_params(sender, **kwargs):
         create_dict['initiator'] = initiator
 
     return create_dict
+
+
+def main_record_for_revision(revision):
+    return revision.message_log.get(parent_uuid__isnull=True)

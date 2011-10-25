@@ -50,7 +50,3 @@ def deserialize(content):
         return False, deserialize_to_dict(content)
     else:
         return True, deserialized
-
-
-def deserialize_revision(content):
-    pass

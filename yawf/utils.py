@@ -106,11 +106,16 @@ def select_for_update(queryset):
     return queryset.select_for_update()
 
 
-def model_diff(instance1, instance2):
+def model_diff(instance1, instance2, full=False):
     diff = []
 
-    # Check only editable fields in model
-    for field in ifilter(attrgetter('editable'), instance1._meta.fields):
+    if full:
+        fields = instance1._meta.fields
+    else:
+        # Check only editable fields in model
+        fields = ifilter(attrgetter('editable'), instance1._meta.fields)
+
+    for field in fields:
         field_name = field.name
         value1 = getattr(instance1, field_name)
         value2 = getattr(instance2, field_name)
