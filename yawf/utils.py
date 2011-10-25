@@ -103,9 +103,7 @@ def optionally_edit(handler):
 
 
 def select_for_update(queryset):
-    sql, params = queryset.query.get_compiler(queryset.db).as_sql()
-    return queryset.model._default_manager.raw(sql.rstrip() + ' FOR UPDATE',
-            params)
+    return queryset.select_for_update()
 
 
 def model_diff(instance1, instance2):
