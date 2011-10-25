@@ -18,8 +18,8 @@ class MessageLog(models.Model):
         get_latest_by = 'created_at'
         ordering = ('created_at',)
 
-    revision = models.OneToOneField('reversion.Revision',
-            blank=True, null=True)
+    revision = models.ForeignKey('reversion.Revision',
+            blank=True, null=True, related_name='message_log')
 
     uuid = models.CharField(max_length=36,
         db_index=True, unique=True)
