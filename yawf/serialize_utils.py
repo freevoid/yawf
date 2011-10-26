@@ -43,9 +43,9 @@ def deserialize_to_dict(content):
     return item['fields']
 
 
-def deserialize(content):
+def deserialize(content, format_='json'):
     try:
-        deserialized = serializers.deserialize("json", content).next()
+        deserialized = serializers.deserialize(format_, content).next()
     except FieldDoesNotExist:
         return False, deserialize_to_dict(content)
     else:
