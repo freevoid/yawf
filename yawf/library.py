@@ -61,6 +61,7 @@ class Library(object):
         ('_handler_patterns', list),
         ('_effect_patterns', list),
         ('_resource_checkers_index', metadefaultdict(set)),
+        ('_registered_message_id_set', set),
     )
 
     _index_containers = (
@@ -102,9 +103,10 @@ class Library(object):
     def message(self, message_spec):
 
         # register in flat registry
-        if message_spec.id in self._message_specs:
+        if message_spec.id in self._registered_message_id_set:
             raise ValueError("Message spec already registered for message '%s'" %
                     (message_spec.id,))
+        self._registered_message_id_set.add(message_spec.id)
         self._message_specs[message_spec.id] = message_spec
 
         # handle message grouping
@@ -371,7 +373,8 @@ class Library(object):
         return ((_handler.permission_checker, message_id)
                 for message_id, _handlers in
                     lookup_result.iteritems()
-                        for _handler in _handlers)
+                        for _handler in _handlers
+                        if message_id in self._registered_message_id_set)
 
     def get_checkers_by_state(self, state):
         return self.get_message_checkers_by_state(state)\

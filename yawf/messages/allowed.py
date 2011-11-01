@@ -8,8 +8,8 @@ def get_allowed_messages(sender, obj):
     check_result = dict((c, c(obj, sender)) for c in
             workflow.get_message_checkers_by_state(obj.state))
 
-    for checkers, message in workflow.get_available_messages(obj.state):
-        if any(check_result.get(i) for i in checkers):
+    for checker, message in workflow.get_available_messages(obj.state):
+        if checker(obj, sender, cache=check_result):
             yield message
 
 
