@@ -135,21 +135,23 @@ def transactional_transition(workflow, obj, message, state_transition,
             new_instance=locked_obj,
             transition_result=handler_result)
 
-    # continuation is an side effect actions evaluator
-    continuation = lambda:\
-        list(
-            perform_side_effect(
-                obj,
-                locked_obj,
-                message=message,
-                workflow=workflow,
-                extra_context=extra_context)) + map(apply, pending_calls)
+    performed_effects, deferred_effects = perform_side_effect(
+                                    obj,
+                                    locked_obj,
+                                    message=message,
+                                    workflow=workflow,
+                                    extra_context=extra_context)
+
 
     # decide to evaluate side effect actions now or defer to caller
     if transactional_side_effect:
-        side_effect_result = continuation()
+        side_effect_result = (performed_effects +
+                                list(deferred_effects) +
+                                map(apply, pending_calls))
     else:
-        side_effect_result = continuation
+        side_effect_result = lambda: (performed_effects +
+                                list(deferred_effects) +
+                                map(apply, pending_calls))
 
     new_state = getattr(locked_obj, workflow.state_attr_name)
     logger.info("Performed state transition of object %d: %s -> %s",
@@ -166,26 +168,37 @@ def perform_side_effect(old_obj, new_obj,
     old_state = getattr(old_obj, workflow.state_attr_name)
     new_state = getattr(new_obj, workflow.state_attr_name)
 
-    effects = workflow.library.get_effects(
-            old_state, new_state, message.id)
+    (transactional_effects,
+            deferrable_effects) = workflow.library\
+                                        .get_effects_for_transition(
+                                            old_state, new_state, message.id)
+
+    if not transactional_effects and not deferrable_effects:
+        logger.info(u"Effect undefined: object id %s, state %s -> %s",
+                new_obj.id, old_state, new_state)
+        return [], []
 
     if extra_context is None:
         extra_context = {}
 
-    if effects:
-        for effect in effects:
-            yield effect(
-                old_obj=old_obj,
-                obj=new_obj,
-                sender=message.sender,
-                params=message.params,
-                message_spec=message.spec,
-                extra_context=extra_context,
-            )
+    effect_kwargs = dict(
+        old_obj=old_obj,
+        obj=new_obj,
+        sender=message.sender,
+        params=message.params,
+        message_spec=message.spec,
+        extra_context=extra_context,
+    )
+
+    if transactional_effects:
+        performed = [effect(**effect_kwargs) for effect in transactional_effects]
     else:
-        logger.info(u"Effect undefined: object id %s, state %s -> %s",
-                new_obj.id, old_state, new_state)
-        return
+        performed = []
+    if deferrable_effects:
+        deferred = (effect(**effect_kwargs) for effect in deferrable_effects)
+    else:
+        deferred = []
+    return performed, deferred
 
 
 def _iterate_transition_result(transition_result, message, obj):

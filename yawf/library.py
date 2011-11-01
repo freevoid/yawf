@@ -69,6 +69,8 @@ class Library(object):
         ('_handler_state_index', metadefaultdict(metadefaultdict(list))),
         ('_message_checkers_index', metadefaultdict(set)),
         ('_effect_index', metadefaultdict(list)),
+        ('_deferrable_effect_index', metadefaultdict(list)),
+        ('_transactional_effect_index', metadefaultdict(list)),
         ('_possible_effect_index', metadefaultdict(list)),
     )
 
@@ -263,6 +265,10 @@ class Library(object):
                     for state_to in states_to:
                         key = (state_from, state_to, message_id)
                         self._effect_index[key].append(effect)
+                        if effect.is_transactional:
+                            self._transactional_effect_index[key].append(effect)
+                        else:
+                            self._deferrable_effect_index[key].append(effect)
 
         self._is_index_built = True
 
@@ -305,6 +311,12 @@ class Library(object):
     def get_effects(self, from_state, to_state, message_id):
         key = (from_state, to_state, message_id)
         return self._effect_index.get(key)
+
+    @touches_index
+    def get_effects_for_transition(self, from_state, to_state, message_id):
+        key = (from_state, to_state, message_id)
+        return (self._transactional_effect_index.get(key),
+                self._deferrable_effect_index.get(key))
 
     @touches_index
     def get_possible_effects(self, from_state, message_id):

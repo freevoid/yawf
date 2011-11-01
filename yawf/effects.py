@@ -11,6 +11,7 @@ class SideEffect(object):
     message_group = None
     states_from = None
     states_to = None
+    is_transactional = False
 
     def __init__(self, message_id=None,
             states_from=None, states_to=None,
