@@ -19,18 +19,6 @@ def proxy_method(proxy_obj_attr, proxy_attr):
     return proxy_method
 
 
-def form_for_model(model_cls):
-
-    from django import forms
-
-    class DefaultModelForm(forms.ModelForm):
-
-        class Meta:
-            model = model_cls
-
-    return DefaultModelForm
-
-
 class WorkflowMeta(type):
 
     def __new__(cls, name, bases, attrs):
@@ -67,8 +55,6 @@ class WorkflowBase(object):
     initial_state = INITIAL_STATE
     state_choices = None
     default_permission_checker = permissions.allow_to_all
-    create_form_cls = None
-    create_form_template = None
     verbose_name = None
     verbose_state_names = None
     state_attr_name = 'state'
@@ -100,8 +86,6 @@ class WorkflowBase(object):
         if id is not None:
             self.id = id
 
-        if self.create_form_cls is None:
-            self.create_form_cls = form_for_model(self.model_class)
 
         self.inherit_behaviour = inherit_behaviour
 
@@ -155,12 +139,6 @@ class WorkflowBase(object):
 
     def get_message_specs(self):
         return self._library._message_specs
-
-    def instance_fabric(self, sender, cleaned_data):
-        return self.model_class(**cleaned_data)
-
-    def post_create_hook(self, sender, cleaned_data, instance):
-        pass
 
     def validate(self):
 

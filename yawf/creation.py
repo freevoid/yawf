@@ -4,6 +4,28 @@ from yawf.config import DEFAULT_START_MESSAGE, WORKFLOW_TYPE_ATTR
 from yawf import get_workflow, get_workflow_by_instance
 from yawf import dispatch
 from yawf.exceptions import WorkflowNotLoadedError, CreateValidationError
+from yawf.base import WorkflowBase
+
+
+class CreationAwareWorkflow(WorkflowBase):
+
+    create_form_cls = None
+    create_form_template = None
+
+    def __init__(self, *args, **kwargs):
+        super(CreationAwareWorkflow, self).__init__(*args, **kwargs)
+
+        if self.create_form_cls is None:
+            self.create_form_cls = form_for_model(self.model_class)
+        elif isinstance(self.create_form_cls, basestring):
+            self.create_form_cls = class_by_dotted_name(self.create_form_cls)
+
+    def instance_fabric(self, sender, cleaned_data):
+        return self.model_class(**cleaned_data)
+
+    def post_create_hook(self, sender, cleaned_data, instance):
+        pass
+
 
 @transaction.commit_on_success
 def create(workflow_type, sender, raw_parameters):
@@ -42,3 +64,25 @@ def start_workflow(obj, sender, start_message_params=None):
 
     return dispatch.dispatch(obj, sender, start_message_id,
                                                 start_message_params)
+
+
+def form_for_model(model_cls):
+    from django.forms.models import modelform_factory
+    return modelform_factory(model_cls)
+
+
+class InvalidDottedNameError(ValueError):
+    pass
+
+
+def class_by_dotted_name(dotted_name):
+    from django.utils import importlib
+    try:
+        # Trying to import the given backend, in case it's a dotted path
+        mod_path, cls_name = dotted_name.rsplit('.', 1)
+        mod = importlib.import_module(mod_path)
+        cls = getattr(mod, cls_name)
+    except (AttributeError, ImportError, ValueError):
+        raise InvalidDottedNameError("Could not find class '%s'" % dotted_name)
+    else:
+        return cls
