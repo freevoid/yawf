@@ -102,3 +102,38 @@ class ComplexStateTransition(Handler):
 
     def perform(self, obj, sender, **kwargs):
         return lambda obj: self.transition(obj, sender, **kwargs)
+
+
+class EditHandler(ComplexStateTransition):
+
+    field_names = None
+
+    def post_hook(self, obj):
+        return
+
+    def transition(self, obj, sender, **kwargs):
+
+        # to ensure that we will update, not insert new
+        kwargs.pop('id', None)
+        kwargs.pop('pk', None)
+
+        field_names = self.field_names
+        if field_names:
+            for field_name in field_names:
+                value = kwargs.get(field_name, '__missing')
+                if value != '__missing':
+                    setattr(obj, field_name, value)
+        else:
+            for field_name in (f.name for f in obj._meta.fields):
+                value = kwargs.get(field_name, '__missing')
+                if value != '__missing':
+                    setattr(obj, field_name, value)
+
+            for field_name in (f.name for f in obj._meta.many_to_many):
+                value = kwargs.get(field_name)
+                if value is not None:
+                    setattr(obj, field_name, value)
+
+        obj.save()
+
+        return self.post_hook(obj)
