@@ -43,7 +43,7 @@ class WorkflowMeta(type):
                 'Use of extra_valid_states is DEPRECATED. Change your code to use states instead.',
                 DeprecationWarning)
 
-        attrs['_library'] = Library()
+        attrs['_library'] = Library(attrs.get('registrants'))
         return super(WorkflowMeta, cls).__new__(cls, name, bases, attrs)
 
 
@@ -72,6 +72,7 @@ class WorkflowBase(object):
     verbose_name = None
     verbose_state_names = None
     state_attr_name = 'state'
+    registrants = ()
 
     model_class = None
 

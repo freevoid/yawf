@@ -4,6 +4,7 @@ from functools import wraps
 from operator import attrgetter
 
 from django.utils.datastructures import MergeDict
+from django.utils.importlib import import_module
 
 from yawf.effects import SideEffect
 from yawf.handlers import Handler
@@ -43,7 +44,20 @@ def touches_index(method):
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         if not self._is_index_built:
+            if not self._is_imported_registrants:
+                self.import_registrants()
             self.rebuild_index()
+        return method(self, *args, **kwargs)
+
+    return wrapper
+
+
+def need_imports(method):
+
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        if not self._is_imported_registrants:
+            self.import_registrants()
         return method(self, *args, **kwargs)
 
     return wrapper
@@ -52,6 +66,7 @@ def touches_index(method):
 class Library(object):
 
     _is_index_built = False
+    _is_imported_registrants = False
 
     _containers = (
         ('_resources', dict),
@@ -75,9 +90,18 @@ class Library(object):
         ('_possible_effect_index', metadefaultdict(list)),
     )
 
-    def __init__(self):
+    def __init__(self, registrants=()):
         self._init_containers()
+        if registrants:
+            self._registrants = registrants
+        else:
+            self._registrants = ()
         super(Library, self).__init__()
+
+    def import_registrants(self):
+        for dotted_name in self._registrants:
+            import_module(dotted_name)
+        self._is_imported_registrants = True
 
     @classmethod
     def proxy_library(cls, base, *bases):
@@ -324,6 +348,7 @@ class Library(object):
     def get_possible_effects(self, from_state, message_id):
         return self._possible_effect_index.get((from_state, message_id)) or []
 
+    @need_imports
     def get_message_spec(self, message_id):
         '''
         Get registered message spec class with given id.
