@@ -42,10 +42,14 @@ class ResourcePermissionDeniedError(PermissionDeniedError):
 
 class MessageValidationError(YawfException):
 
-    code = 'validation_error'
+    code = 'yawf_validation_error'
+
+    def __init__(self, validator):
+        self.validator = validator
+
     @property
     def context(self):
-        return self.args[0]
+        return self.validator.errors
 
 
 class CreateValidationError(MessageValidationError):

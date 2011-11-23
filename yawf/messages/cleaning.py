@@ -11,6 +11,6 @@ def clean_message_data(workflow, obj, message):
         message.id = message_spec.id
         message.spec = message_spec
     else:
-        raise MessageValidationError(validator.errors)
+        raise MessageValidationError(validator)
 
     return message
