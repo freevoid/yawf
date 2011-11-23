@@ -1,6 +1,6 @@
 from django import forms
 
-from yawf.base import WorkflowBase
+from yawf.creation import CreationAwareWorkflow
 from yawf.messages.common import message_spec_fabric, BasicStartMessage, MessageSpec
 from yawf.messages.submessage import Submessage, RecursiveSubmessage
 
@@ -10,7 +10,7 @@ from yawf.utils import make_common_updater
 from .models import Window, WINDOW_OPEN_STATUS
 
 
-class SimpleWorkflow(WorkflowBase):
+class SimpleWorkflow(CreationAwareWorkflow):
 
     id = 'simple'
     verbose_name = 'Just a simple workflow'
