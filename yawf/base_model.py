@@ -1,12 +1,7 @@
-from django.db import models
-
 from yawf import get_workflow_by_instance
 
 
-class WorkflowAwareModelBase(models.Model):
-
-    class Meta:
-        abstract = True
+class WorkflowAwareModelBase(object):
 
     _workflow = None
 
