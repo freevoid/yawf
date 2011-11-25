@@ -14,15 +14,19 @@ class MessageViewMixin(object):
     message_id = None
 
     def get_message_id(self):
-        return self.message_id
 
-    def get_sender(self):
+        dynamic_message_id = self.kwargs.get('message_id')
+        return self.message_id\
+            if dynamic_message_id is None else dynamic_message_id
+
+    def get_sender(self, *args, **kwargs):
+
         return self.request.user
 
 
 class YawfMessageView(MessageViewMixin, SingleObjectMixin, ProcessFormView):
 
-    def post(self, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
 
         obj = self.get_object()
         msg_id = self.get_message_id()
@@ -55,6 +59,7 @@ class HandlerViewMixin(MessageViewMixin):
             message_id=view.get_message_id(),
             states_from=view.states_from,
             permission_checker=view.permission_checker)(view.perform)
+
 
     def perform(self, obj, sender, **kwargs):
         return lambda obj: self.transition(obj, sender, **kwargs)
