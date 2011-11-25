@@ -60,6 +60,7 @@ class HandlerViewMixin(MessageViewMixin):
             states_from=view.states_from,
             permission_checker=view.permission_checker)(view.perform)
 
+        return view
 
     def perform(self, obj, sender, **kwargs):
         return lambda obj: self.transition(obj, sender, **kwargs)
