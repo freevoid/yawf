@@ -19,6 +19,34 @@ from yawf.state_transition import transition, transactional_transition
 logger = logging.getLogger(__name__)
 
 
+class Dispatcher(object):
+    '''
+    Class-style dispatching.
+
+    One can use Dispatcher instead of dispatch if it seems more natural.
+
+    Example:
+
+    >>> d = Dispatcher(obj, user, extra_context={'request': request})
+    >>> new_obj, handler_result, effect_result = d.edit(foo='bar')
+
+    So object-recipient and sender are passed to the dispatcher once and
+    message passing is done by calling methods on dispatcher object.
+    '''
+    def __init__(self, obj, sender, **options):
+        self.obj = obj
+        self.sender = sender
+        self.options = options
+        super(Dispatcher, self).__init__()
+
+    def __getattribute__(self, name):
+        message_id = name
+        return lambda **raw_params:\
+            dispatch(self.obj, self.sender, message_id,
+                    raw_params,
+                    **self.options)
+
+
 def dispatch(obj, sender, message_id,
         raw_params=None,
         extra_context=None):
