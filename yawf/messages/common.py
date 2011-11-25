@@ -9,7 +9,7 @@ def message_spec_fabric(id, verb=None, rank=0, **attrs):
 
 BasicCancelMessage = message_spec_fabric(
     id='cancel',
-    verb=_('delete'),
+    verb=_('cancel'),
     rank=1000,
 )
 
@@ -34,16 +34,4 @@ class BasicEditMessage(MessageSpec):
 BasicStartMessage = message_spec_fabric(
     id='start_workflow',
     verb=_('create'),
-)
-
-
-BasicPassedMessage = message_spec_fabric(
-    id='passed',
-    verb=_('mark passed'),
-)
-
-
-BasicCameMessage = message_spec_fabric(
-    id='came',
-    verb=_('mark came'),
 )
