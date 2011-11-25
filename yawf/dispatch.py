@@ -4,7 +4,7 @@ import copy
 from itertools import ifilter
 
 import reversion
-from yawf.message_log.models import log_record_params, MessageLog
+from yawf.message_log.models import log_record_params, MessageLog, ensure_logging
 
 from yawf.config import STATE_TYPE_CONSTRAINT,\
          TRANSACTIONAL_SIDE_EFFECT, USE_SELECT_FOR_UPDATE, MESSAGE_LOG_ENABLED
@@ -94,7 +94,6 @@ def dispatch_message(obj, message, extra_context=None,
         transition_ = transition
 
     with reversion.create_revision():
-
         new_obj, transition_result, side_effect_result =\
             transition_(
                 workflow, obj, message, state_transition,
@@ -111,6 +110,9 @@ def dispatch_message(obj, message, extra_context=None,
                 transition_result=transition_result)
 
             reversion.add_meta(MessageLog, **record_params)
+
+    if MESSAGE_LOG_ENABLED:
+        ensure_logging(new_obj, record_params)
 
     # TODO: send_robust + logging?
     message_handled.send(

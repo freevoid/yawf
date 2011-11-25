@@ -4,8 +4,9 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 
-from yawf import serialize_utils as json
+import reversion
 
+from yawf import serialize_utils as json
 from yawf.utils import memoizible_property
 
 logger = logging.getLogger(__name__)
@@ -84,3 +85,20 @@ def log_record_params(sender, **kwargs):
 
 def main_record_for_revision(revision):
     return revision.message_log.get(parent_uuid__isnull=True)
+
+
+def ensure_logging(obj, message_kwargs):
+    message_lookup = {
+        'uuid': message_kwargs['uuid'],
+        'message': message_kwargs['message'],
+        'workflow_id': message_kwargs['workflow_id'],
+    }
+
+    if not MessageLog.objects.filter(**message_lookup).exists():
+        try:
+            revision_id = (reversion.get_for_object(obj)
+                                .values_list('revision_id', flat=True)[0])
+        except IndexError:
+            revision_id = None
+        message_kwargs['revision_id'] = revision_id
+        MessageLog.objects.create(**message_kwargs)
