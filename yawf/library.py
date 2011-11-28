@@ -446,7 +446,12 @@ class Library(object):
             registrator(obj)
             return func
 
-        return _registrator
+        if inspect.isfunction(message_id):
+            func = message_id
+            message_id = None
+            return _registrator(func)
+        else:
+            return _registrator
 
     def _register_handler_obj(self, handler):
 
