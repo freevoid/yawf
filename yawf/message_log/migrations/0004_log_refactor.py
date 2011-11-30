@@ -6,6 +6,10 @@ from django.db import models
 
 class Migration(SchemaMigration):
 
+    depends_on = (
+        ('reversion', '0005_auto__add_field_revision_manager_slug'),
+    )
+
     def forwards(self, orm):
         
         # Deleting field 'MessageLog.parent_id'
