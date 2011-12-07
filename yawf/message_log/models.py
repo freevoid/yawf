@@ -4,7 +4,6 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 
-import reversion
 
 from yawf import serialize_utils as json
 from yawf.utils import memoizible_property
@@ -59,7 +58,7 @@ class MessageLog(models.Model):
         return json.dumps(params)
 
 
-def log_record_params(sender, **kwargs):
+def log_message(sender, **kwargs):
     message = kwargs['message']
     instance = kwargs['new_instance']
     transition_result = kwargs['transition_result']
@@ -80,25 +79,21 @@ def log_record_params(sender, **kwargs):
     if initiator:
         create_dict['initiator'] = initiator
 
-    return create_dict
+    return MessageLog.objects.create(**create_dict)
+
+
+def merge_revision(self, revision, message_log):
+	message_log.revision = revision
+	message_log.save()
+
+# revision_merger is a little hack for reversion to "merge" optional
+# revision information to message log records
+revision_merger = type('', (), {
+	'_default_manager': type('', (), {
+		'create': merge_revision,
+	})()
+})()
 
 
 def main_record_for_revision(revision):
     return revision.message_log.get(parent_uuid__isnull=True)
-
-
-def ensure_logging(obj, message_kwargs):
-    message_lookup = {
-        'uuid': message_kwargs['uuid'],
-        'message': message_kwargs['message'],
-        'workflow_id': message_kwargs['workflow_id'],
-    }
-
-    if not MessageLog.objects.filter(**message_lookup).exists():
-        try:
-            revision_id = (reversion.get_for_object(obj)
-                                .values_list('revision_id', flat=True)[0])
-        except IndexError:
-            revision_id = None
-        message_kwargs['revision_id'] = revision_id
-        MessageLog.objects.create(**message_kwargs)
