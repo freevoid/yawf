@@ -11,9 +11,9 @@ urlpatterns = patterns('',
     url(r'^describe/(?P<workflow_id>\w+)/$', 'yawf.views.describe_workflow',
         name='describe'),
     url(r'^describe/(?P<workflow_id>\w+)/graph/handlers/$',
-        'yawf.views.handlers_graph'),
+        'yawf.graph_views.handlers_graph'),
     url(r'^describe/(?P<workflow_id>\w+)/graph/effects/$',
-        'yawf.views.effects_graph',
+        'yawf.graph_views.effects_graph',
         ),
 
     # Uncomment the admin/doc line below to enable admin documentation:
