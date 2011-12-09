@@ -15,10 +15,14 @@ class CreationAwareWorkflow(WorkflowBase):
     def __init__(self, *args, **kwargs):
         super(CreationAwareWorkflow, self).__init__(*args, **kwargs)
 
+    def get_create_form_cls(self):
+
         if self.create_form_cls is None:
-            self.create_form_cls = form_for_model(self.model_class)
+            return form_for_model(self.model_class)
         elif isinstance(self.create_form_cls, basestring):
-            self.create_form_cls = class_by_dotted_name(self.create_form_cls)
+            return class_by_dotted_name(self.create_form_cls)
+        else:
+            return self.create_form_cls
 
     def instance_fabric(self, sender, cleaned_data):
         return self.model_class(**cleaned_data)
@@ -33,7 +37,8 @@ def create(workflow_type, sender, raw_parameters):
     if workflow is None:
         raise WorkflowNotLoadedError(workflow_type)
 
-    form = workflow.create_form_cls(raw_parameters)
+    create_form_cls = workflow.get_create_form_cls()
+    form = create_form_cls(raw_parameters)
     if form.is_valid():
 
         instance = workflow.instance_fabric(sender, form.cleaned_data)
