@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from operator import attrgetter
+
 from yawf import get_workflow_by_instance
 
 
@@ -24,3 +26,27 @@ def is_valid_message(obj, message_id):
     workflow = get_workflow_by_instance(obj)
 
     return workflow.is_valid_message(message_id, obj.state)
+
+
+class AllowedWrapper(object):
+
+    def __init__(self, sender, obj):
+        self.sender = sender
+        self.obj = obj
+        self._messages_lookup = None
+
+    def _init_lookup(self):
+        self._specs = get_message_specs(self.sender, self.obj)
+        self._messages_lookup = dict(
+            (message.id, message)
+            for message in self._specs
+        )
+
+    def __getitem__(self, message_id):
+        if self._messages_lookup is None:
+            self._init_lookup()
+
+        return self._messages_lookup.get(message_id)
+
+    def __iter__(self):
+        return sorted(self._specs, key_func=attrgetter('rank'))
