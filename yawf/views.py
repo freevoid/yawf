@@ -27,7 +27,7 @@ class YawfMessageView(MessageViewMixin, SingleObjectMixin, ProcessFormView):
 
     def post(self, request, *args, **kwargs):
 
-        obj = self.get_object()
+        obj = self.object = self.get_object().get_clarified_instance()
         msg_id = self.get_message_id()
         sender = self.get_sender()
 
