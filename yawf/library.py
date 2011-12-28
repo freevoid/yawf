@@ -16,6 +16,7 @@ from yawf.exceptions import (
     GroupPathEmptyError,
 )
 from yawf.messages.spec import MessageSpec
+from yawf.messages.common import message_spec_fabric
 from yawf.permissions import OrChecker
 from yawf.utils import metadefaultdict, maybe_list
 
@@ -154,7 +155,8 @@ class Library(object):
 
         return message_spec
 
-    def message_by_form(self, message_id=None, message_id_list=None, base_spec=MessageSpec):
+    def message_by_form(self, message_id=None, message_id_list=None,
+            base_spec=MessageSpec, **attrs):
 
         if message_id is None:
             if message_id_list is None:
@@ -165,11 +167,13 @@ class Library(object):
         def registrator(message_validator):
 
             for message_id in message_id_list:
-                class Spec(base_spec):
-                    id = message_id
-                    validator_cls = message_validator
+                spec_cls = message_spec_fabric(
+                    message_id,
+                    base_spec=base_spec,
+                    validator_cls=message_validator,
+                    **attrs)
 
-                self.message(Spec)
+                self.message(spec_cls)
             return message_validator
 
         return registrator
