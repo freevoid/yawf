@@ -364,6 +364,10 @@ class Library(object):
             raise MessageSpecNotRegisteredError(message_id)
         return message_spec
 
+    @need_imports
+    def get_possible_message_ids(self):
+        return self._registered_message_id_set
+
     def get_resource(self, state, resource_id):
         '''
         Return resource object or None if there is no resource with given id
