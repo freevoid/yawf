@@ -4,11 +4,13 @@ import uuid
 class Message(object):
 
     def __init__(self, sender, message_id,
-            raw_params=None, message_group=None, parent_message_id=None):
+            raw_params=None, message_group=None, parent_message_id=None,
+            clean_params=None):
         self.sender = sender
         self.id = message_id
         self._unique_id = None
         self.raw_params = raw_params if raw_params is not None else {}
+        self.clean_params = clean_params if clean_params is not None else None
         self.params = None
         self.parent_message_id = parent_message_id
         self.message_group = message_group\

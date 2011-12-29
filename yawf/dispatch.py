@@ -3,7 +3,9 @@ import logging
 import copy
 from itertools import ifilter
 
+from django.utils.encoding import smart_unicode
 import reversion
+
 from yawf.message_log.models import log_message, revision_merger
 
 from yawf.config import STATE_TYPE_CONSTRAINT,\
@@ -60,6 +62,12 @@ def dispatch(obj, sender, message_id,
         obj, message, extra_context=extra_context)
 
 
+def dispatch_no_clean(obj, sender, message_id, params=None, extra_context=None):
+    message = Message(sender, message_id, clean_params=params)
+    return dispatch_message(
+        obj, message, extra_context=extra_context)
+
+
 def dispatch_message(obj, message, extra_context=None,
         transactional_side_effect=TRANSACTIONAL_SIDE_EFFECT,
         need_lock_object=USE_SELECT_FOR_UPDATE,
@@ -80,8 +88,8 @@ def dispatch_message(obj, message, extra_context=None,
          * transition result (returned by handler object)
          * side effects results
     '''
-    logger.info(u"Backend got message from %s to %s: %s %s",
-            message.sender, obj, message.id, message.raw_params)
+    logger.debug(u"Backend got message from %s to %s: %s %s",
+            message.sender, obj, message.id, smart_unicode(message.raw_params))
 
     # can raise WorkflowNotLoadedError
     workflow = get_workflow_by_instance(obj)
