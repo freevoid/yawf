@@ -13,6 +13,7 @@ from yawf import get_workflow_by_instance
 from yawf.exceptions import OldStateInconsistenceError,\
          ConcurrentRevisionUpdate
 from yawf.messages.submessage import Submessage
+from yawf.messages.transformation import TransformationResult
 
 logger = logging.getLogger(__name__)
 
@@ -118,13 +119,18 @@ def transactional_transition(workflow, obj, message, state_transition,
     # All ok, perform db changes as transaction
     transition_result = state_transition(locked_obj)
 
+    new_obj = None
+
     # If action returned generator, evaluating it using special function
     if isinstance(transition_result, GeneratorType):
-        handler_result, pending_calls = _iterate_transition_result(
+        handler_result, pending_calls, new_obj = _iterate_transition_result(
             transition_result, message, obj)
     else:
         handler_result = transition_result
         pending_calls = []
+
+    if new_obj is None:
+        new_obj = locked_obj
 
     # Sending signal
     transition_handled.send(
@@ -132,12 +138,12 @@ def transactional_transition(workflow, obj, message, state_transition,
             workflow=workflow,
             message=message,
             instance=obj,
-            new_instance=locked_obj,
+            new_instance=new_obj,
             transition_result=handler_result)
 
     performed_effects, deferred_effects = perform_side_effect(
                                     obj,
-                                    locked_obj,
+                                    new_obj,
                                     message=message,
                                     workflow=workflow,
                                     extra_context=extra_context)
@@ -153,10 +159,10 @@ def transactional_transition(workflow, obj, message, state_transition,
                                 list(deferred_effects) +
                                 map(apply, pending_calls))
 
-    new_state = getattr(locked_obj, workflow.state_attr_name)
+    new_state = getattr(new_obj, workflow.state_attr_name)
     logger.info("Performed state transition of object %d: %s -> %s",
             obj_id, old_state, new_state)
-    return locked_obj, handler_result, side_effect_result
+    return new_obj, handler_result, side_effect_result
 
 
 def perform_side_effect(old_obj, new_obj,
@@ -205,6 +211,7 @@ def _iterate_transition_result(transition_result, message, obj):
 
     pending_calls = []
     handler_result = []
+    new_obj = None
 
     try:
         yielded_value = transition_result.next()
@@ -221,6 +228,8 @@ def _iterate_transition_result(transition_result, message, obj):
                                             parent_message=message)
             pending_calls.append(side_effects_performer)
             to_send = new_obj
+        elif isinstance(yielded_value, TransformationResult):
+            new_obj = yielded_value.new_obj
         else:
             handler_result.append(yielded_value)
 
@@ -229,4 +238,4 @@ def _iterate_transition_result(transition_result, message, obj):
         except StopIteration:
             break
 
-    return handler_result, pending_calls
+    return handler_result, pending_calls, new_obj
