@@ -34,13 +34,20 @@ class YawfMessageView(MessageViewMixin, SingleObjectMixin, ProcessFormView):
         try:
             obj, handler_result, effect_result = dispatch.dispatch(obj, sender,
                     msg_id, self.request.POST)
-        except MessageValidationError as e:
-            return self.form_invalid(e.validator)
+            self.object = obj
+        except BaseException as e:
+            return self.process_exception(obj, sender, msg_id, e)
         else:
             return self.wrap_yawf_result(obj, handler_result, effect_result)
 
     def wrap_yawf_result(self, obj, handler_result, effect_result):
         return HttpResponseRedirect(self.get_success_url())
+
+    def process_exception(self, obj, sender, msg_id, exc):
+        if isinstance(exc, MessageValidationError):
+            return self.form_invalid(exc.validator)
+        else:
+            raise
 
 
 class HandlerViewMixin(MessageViewMixin):
