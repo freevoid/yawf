@@ -31,3 +31,4 @@ class Message(object):
 
 from .cleaning import clean_message_data
 from .submessage import Submessage
+from .transformation import TransformationResult
