@@ -216,7 +216,7 @@ def _iterate_transition_result(transition_result, message, obj):
     try:
         yielded_value = transition_result.next()
     except StopIteration:
-        return handler_result, pending_calls
+        return handler_result, pending_calls, new_obj
 
     while True:
         to_send = None
