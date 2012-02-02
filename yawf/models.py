@@ -5,7 +5,7 @@ from yawf.config import INITIAL_STATE
 from yawf.base_model import WorkflowAwareModelBase
 
 
-class WorkflowAwareModel(WorkflowAwareModelBase):
+class WorkflowAwareModel(WorkflowAwareModelBase, models.Model):
 
     class Meta:
         abstract = True
