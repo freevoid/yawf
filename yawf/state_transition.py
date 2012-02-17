@@ -99,7 +99,8 @@ def transactional_transition(workflow, obj, message, state_transition,
     # We select for update object because since THIS point we cares
     # about serialization of access to our: we are going to change it's state
     if need_lock_object:
-        locked_obj = select_for_update(workflow.model_class.objects.filter(id=obj_id))[0]
+        locked_obj = select_for_update(
+                workflow.model_class.objects.filter(id=obj_id)).get()
         locked_revision = getattr(locked_obj, REVISION_ATTR, None)
 
         # Checking that revision wasn't updated while we worked with object
