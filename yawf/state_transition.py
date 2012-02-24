@@ -223,12 +223,12 @@ def _iterate_transition_result(transition_result, message, obj):
         to_send = None
 
         if isinstance(yielded_value, Submessage):
-            new_obj, _sub_result, side_effects_performer =\
+            sub_obj, _sub_result, side_effects_performer =\
                                         yielded_value.dispatch(
                                             parent_obj=obj,
                                             parent_message=message)
             pending_calls.append(side_effects_performer)
-            to_send = new_obj
+            to_send = sub_obj
         elif isinstance(yielded_value, TransformationResult):
             new_obj = yielded_value.new_obj
         else:
