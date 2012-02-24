@@ -137,3 +137,18 @@ class EditHandler(ComplexStateTransition):
         obj.save()
 
         return self.post_hook(obj)
+
+
+class SerializibleHandlerResult(object):
+
+    type = None
+
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+        super(SerializibleHandlerResult, self).__init__()
+
+    def get_serializible_value(self):
+        return {
+            'type': self.type,
+            'result': self.kwargs,
+        }

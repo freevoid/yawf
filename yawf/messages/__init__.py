@@ -12,6 +12,7 @@ class Message(object):
         self.raw_params = raw_params if raw_params is not None else {}
         self.clean_params = clean_params if clean_params is not None else None
         self.params = None
+        self.dehydrated_params = None
         self.parent_message_id = parent_message_id
         self.message_group = message_group\
             if message_group is not None else self.unique_id

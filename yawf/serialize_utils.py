@@ -10,6 +10,8 @@ from django.core import serializers
 from django.utils.simplejson import dumps as sj_dumps, loads
 from django.utils.translation import force_unicode
 
+from yawf.handlers import SerializibleHandlerResult
+
 
 class CustomJSONEncoder(DjangoJSONEncoder):
 
@@ -21,11 +23,16 @@ class CustomJSONEncoder(DjangoJSONEncoder):
         elif isinstance(o, date):
             return o.strftime("%Y-%m-%d")
         elif isinstance(o, models.Model):
-            return force_unicode(o.pk)
+            if hasattr(o, 'natural_key'):
+                return o.natural_key()
+            else:
+                return force_unicode(o.pk)
         elif isinstance(o, models.query.QuerySet):
             return map(attrgetter('pk'), o)
         elif isinstance(o, set):
             return list(o)
+        elif isinstance(o, SerializibleHandlerResult):
+            return o.get_serializible_value()
         else:
             return super(CustomJSONEncoder, self).default(o)
 
@@ -50,3 +57,27 @@ def deserialize(content, format_='json'):
         return False, deserialize_to_dict(content)
     else:
         return True, deserialized
+
+
+def json_converter(attr_name, getter=None, setter=None):
+    """
+    Returns property object which wraps given attr_name with json load/dump
+    """
+
+    if getter is not None:
+        def json_getter(instance):
+            json_str = getattr(instance, attr_name)
+            return getter(loads(json_str)) if json_str is not None else None
+    else:
+        def json_getter(instance):
+            json_str = getattr(instance, attr_name)
+            return loads(json_str) if json_str is not None else None
+
+    if setter is not None:
+        def json_setter(instance, dict_):
+            setattr(instance, attr_name, setter(dumps(dict_)))
+    else:
+        def json_setter(instance, dict_):
+            setattr(instance, attr_name, dumps(dict_))
+
+    return property(json_getter, json_setter)
