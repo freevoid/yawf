@@ -15,7 +15,7 @@ from yawf.exceptions import IllegalStateError,\
          MessageIgnored
 from yawf.signals import message_handled
 from yawf import get_workflow_by_instance
-from yawf.messages import Message, clean_message_data
+from yawf.messages import Message
 from yawf.state_transition import transition, transactional_transition
 
 logger = logging.getLogger(__name__)
@@ -95,7 +95,7 @@ def dispatch_message(obj, message, extra_context=None,
     workflow = get_workflow_by_instance(obj)
 
     # validate data and filter out trash
-    message = clean_message_data(workflow, obj, message)
+    message.clean(workflow, obj)
 
     # find a transition handler, can raise handler-related errors
     handler = get_handler(workflow, message, obj)

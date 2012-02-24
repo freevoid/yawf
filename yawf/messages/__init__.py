@@ -1,5 +1,7 @@
 import uuid
 
+from yawf.exceptions import MessageValidationError
+
 
 class Message(object):
 
@@ -29,7 +31,27 @@ class Message(object):
             self._unique_id = uuid.uuid1()
         return self._unique_id
 
+    def clean(self, workflow, obj):
+        message_spec = workflow.get_message_spec(self.id)
 
-from .cleaning import clean_message_data
+        if self.clean_params is None:
+            validator_cls = message_spec.validator_cls
+            validator = validator_cls(self.raw_params)
+
+            if validator.is_valid():
+                clean_params = validator.cleaned_data
+            else:
+                raise MessageValidationError(validator)
+        else:
+            clean_params = self.clean_params
+
+        self.params = message_spec.params_wrapper(clean_params)
+        # fix id in case it was a list (group path)
+        self.id = message_spec.id
+        self.spec = message_spec
+
+        return self
+
+
 from .submessage import Submessage
 from .transformation import TransformationResult
