@@ -52,6 +52,14 @@ class Message(object):
 
         return self
 
+    def dehydrate_params(self, workflow, obj):
+        if self.params is None:
+            raise RuntimeError(
+                'Method dehydrate_params cannot be invoked before clean')
+
+        self.dehydrated_params = self.spec.dehydrate_params(obj, self)
+        return self
+
 
 from .submessage import Submessage
 from .transformation import TransformationResult

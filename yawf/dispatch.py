@@ -97,6 +97,9 @@ def dispatch_message(obj, message, extra_context=None,
     # validate data and filter out trash
     message.clean(workflow, obj)
 
+    # dehydrate message params for serializing
+    message.dehydrate_params(workflow, obj)
+
     # find a transition handler, can raise handler-related errors
     handler = get_handler(workflow, message, obj)
 

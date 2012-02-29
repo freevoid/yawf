@@ -93,6 +93,13 @@ class MessageSpec(object):
         '''
         return params
 
+    @classmethod
+    def dehydrate_params(cls, obj, message):
+        '''
+        Method, that returns dehydrated message params for serialization.
+        '''
+        return None
+
     def __unicode__(self):
         return unicode(self.verb)
 
