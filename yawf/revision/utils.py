@@ -80,6 +80,12 @@ class DeserializedRevision(object):
             record.content_type.model])
         return self._index.get(dotted_model_name, {}).get(record.object_id)
 
+    def get_versions_for_content_type(self, ct):
+        dotted_model_name = '.'.join(
+            [ct.app_label,
+             ct.model])
+        return self._index.get(dotted_model_name, {}).values()
+
     def get_object_for_record(self, record):
         return deserialize_version(self.get_version_for_record(record))
 
