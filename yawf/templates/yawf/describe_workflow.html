@@ -6,13 +6,12 @@
 <p>Model class: {{ workflow.model_cls }}</p>
 
 <p>
-    Extra states:
+    States:
     <ul>
         {% for state_id, verbose_name in workflow.verbose_state_names.items %}
         <li>{{ state_id }} ({{ verbose_name }})</li>
         {% endfor %}
     </ul>
-    Non-final states: {{ workflow.get_nonfinal_states }}
 </p>
 
 <p>
