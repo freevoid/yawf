@@ -33,8 +33,6 @@ class SideEffect(object):
                 self.message_group = [message_group]
             else:
                 assert isinstance(message_group, collections.Iterable)
-        elif self.message_id is None:
-            raise ValueError("message_id must be specified for side-effect")
 
         super(SideEffect, self).__init__()
 

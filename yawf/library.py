@@ -285,6 +285,10 @@ class Library(object):
             if not states_to:
                 states_to = self.states
 
+            # if message specs not specified, stick to any registered message
+            if not message_id_list:
+                message_id_list = self._registered_message_id_set
+
             for message_id in message_id_list:
 
                 for state_from in states_from:
