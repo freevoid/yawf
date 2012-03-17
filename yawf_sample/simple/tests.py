@@ -215,7 +215,11 @@ class SimpleWorkflowTest(TestCase, WorkflowTestMixin):
         return yawf.creation.start_workflow(window, self.sender)
 
 
-class GraphViewTest(TestCase):
+class BuiltinViewTest(TestCase):
+
+    def test_describe(self):
+        response = self.client.get('/describe/simple/')
+        self.assertEqual(response.status_code, 200)
 
     def test_handlers_graph(self):
         response = self.client.get('/describe/simple/graph/handlers/')
