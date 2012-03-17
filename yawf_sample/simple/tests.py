@@ -221,6 +221,9 @@ class BuiltinViewTest(TestCase):
         response = self.client.get('/describe/simple/')
         self.assertEqual(response.status_code, 200)
 
+        response = self.client.get('/describe/some_nonexist_workflow/')
+        self.assertEqual(response.status_code, 404)
+
     def test_handlers_graph(self):
         response = self.client.get('/describe/simple/graph/handlers/')
         self.assertEqual(response.status_code, 200)
