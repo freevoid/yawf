@@ -26,4 +26,10 @@ setup(
     author = "Nikolay Zakharov",
     author_email = "nikolay@desh.su",
     keywords = "workflow state transition fsm django",
+
+    install_requires = [
+        "coded_exceptions>=0.1",
+        "django>=1.3",
+        "django-reversion>=1.5",
+    ]
 )
