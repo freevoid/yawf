@@ -177,6 +177,31 @@ class SimpleWorkflowTest(TestCase, WorkflowTestMixin):
         allowed = get_allowed(self.sender, window)
         self.assertItemsEqual(allowed.keys(), ['allowed_messages', 'allowed_resources'])
 
+
+    def test_view_handling(self):
+        window, _, _ = self._new_window(width=500, height=300)
+        self.assertEqual(window.width, 500)
+        self.assertEqual(window.height, 300)
+
+        self.client.post(
+            '/simple/window/%d/resize/' % window.id,
+            {
+                'width': 200,
+                'height': 400,
+            })
+
+        window = Window.objects.get(pk=window.id)
+        self.assertEqual(window.width, 200)
+        self.assertEqual(window.height, 400)
+
+        self.assertEqual(window.open_status, 'normal')
+        r = self.client.post('/simple/window/%d/maximize/' % window.id)
+        self.assertEqual(r.status_code, 200)
+
+        window = Window.objects.get(pk=window.id)
+        self.assertEqual(window.open_status, 'maximized')
+
+
     def _new_window(self, title='Main window', width=500, height=300,
             parent=None):
         window = yawf.creation.create(
@@ -190,7 +215,7 @@ class SimpleWorkflowTest(TestCase, WorkflowTestMixin):
         return yawf.creation.start_workflow(window, self.sender)
 
 
-class ViewTest(TestCase):
+class GraphViewTest(TestCase):
 
     def test_handlers_graph(self):
         response = self.client.get('/describe/simple/graph/handlers/')

@@ -8,6 +8,7 @@ import yawf
 yawf.autodiscover()
 
 urlpatterns = patterns('',
+    url(r'^simple/', include('simple.urls')),
     url(r'^describe/(?P<workflow_id>\w+)/$', 'yawf.views.describe_workflow',
         name='describe'),
     url(r'^describe/(?P<workflow_id>\w+)/graph/handlers/$',

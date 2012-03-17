@@ -1,5 +1,4 @@
 from django.db import models
-
 import reversion
 from yawf.revision import RevisionModelMixin
 

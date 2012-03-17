@@ -7,7 +7,9 @@ from yawf.messages.submessage import Submessage, RecursiveSubmessage
 from yawf.actions import SideEffect
 from yawf.handlers import SimpleStateTransition, Handler, ComplexStateTransition
 from yawf.utils import make_common_updater
-from .models import Window, WINDOW_OPEN_STATUS
+from yawf.annotation import annotate_handler
+
+from yawf_sample.simple.models import Window, WINDOW_OPEN_STATUS
 
 
 class SimpleWorkflow(CreationAwareWorkflow):
@@ -17,6 +19,9 @@ class SimpleWorkflow(CreationAwareWorkflow):
     model_class = Window
     state_choices = WINDOW_OPEN_STATUS.choices
     state_attr_name = 'open_status'
+    registrants = (
+        'yawf_sample.simple.views',
+    )
 
 simple_workflow = SimpleWorkflow()
 
@@ -63,13 +68,6 @@ class ToMinimized(SimpleStateTransition):
     states_from = ['normal', 'maximized']
     state_to = 'minimized'
 
-@simple_workflow.register_handler
-class ToMaximized(SimpleStateTransition):
-
-    message_id = 'maximize'
-    states_from = ['normal', 'minimized']
-    state_to = 'maximized'
-
 #NOTE: example of complex state transition
 @simple_workflow.register_handler
 class MinimizeAll(ComplexStateTransition):
@@ -82,6 +80,7 @@ class MinimizeAll(ComplexStateTransition):
         for child_window in obj.children.all():
             yield (yield Submessage(child_window, 'minimize', sender))
 
+@annotate_handler(states_to=('normal',))
 @simple_workflow.register_handler(states_from=['maximized', 'minimized'])
 def to_normal(obj, sender):
     return 'normal'
