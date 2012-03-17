@@ -25,9 +25,19 @@ class MessageViewMixin(object):
 
 class YawfMessageView(MessageViewMixin, SingleObjectMixin, ProcessFormView):
 
+    @property
+    def model(self):
+        workflow = get_workflow(self.workflow_type)
+        if hasattr(workflow, 'model_class'):
+            return workflow.model_class
+
     def post(self, request, *args, **kwargs):
 
-        obj = self.object = self.get_object().get_clarified_instance()
+        obj = self.get_object()
+        if hasattr(obj, 'get_clarified_instance'):
+            obj = obj.get_clarified_instance()
+
+        self.object = obj
         msg_id = self.get_message_id()
         sender = self.get_sender()
 
@@ -60,11 +70,12 @@ class HandlerViewMixin(MessageViewMixin):
     def as_view(cls, **initkwargs):
         view = super(HandlerViewMixin, cls).as_view(**initkwargs)
 
+        instance = cls(**initkwargs)
         workflow = get_workflow(cls.workflow_type)
         workflow.library.handler(
-            message_id=view.get_message_id(),
-            states_from=view.states_from,
-            permission_checker=view.permission_checker)(view.perform)
+            message_id=instance.get_message_id(),
+            states_from=instance.states_from,
+            permission_checker=instance.permission_checker)(instance.perform)
 
         return view
 
