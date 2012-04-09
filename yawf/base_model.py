@@ -1,3 +1,5 @@
+from django.utils.encoding import force_unicode
+
 from yawf import get_workflow_by_instance
 
 
@@ -15,7 +17,7 @@ class WorkflowAwareModelBase(object):
         return self.workflow.verbose_name
 
     def state_display(self):
-        return self.workflow.verbose_state_names.get(self.state) or self.state
+        return force_unicode(self.workflow.verbose_state_names.get(self.state)) or self.state
 
     def get_clarified_instance(self):
         workflow = self.workflow
