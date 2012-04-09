@@ -32,7 +32,8 @@ class SideEffect(object):
       * `message_spec`: message spec class (because we may want to distinguish
             between different messages in effects);
       * `extra_context`: extra context thas was passed to
-            :py:func:`yawf.dispatch.dispatch`.
+            :py:func:`yawf.dispatch.dispatch`;
+      * `handler_result`: result of the state transition routine.
     '''
 
     message_id = None

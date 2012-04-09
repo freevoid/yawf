@@ -147,6 +147,7 @@ def transactional_transition(workflow, obj, message, state_transition,
                                     new_obj,
                                     message=message,
                                     workflow=workflow,
+                                    handler_result=handler_result,
                                     extra_context=extra_context)
 
 
@@ -167,7 +168,7 @@ def transactional_transition(workflow, obj, message, state_transition,
 
 
 def perform_side_effect(old_obj, new_obj,
-        message, workflow=None, extra_context=None):
+        message, workflow=None, extra_context=None, handler_result=None):
 
     if workflow is None:
         workflow = get_workflow_by_instance(new_obj)
@@ -195,6 +196,7 @@ def perform_side_effect(old_obj, new_obj,
         params=message.params,
         message_spec=message.spec,
         extra_context=extra_context,
+        handler_result=handler_result,
     )
 
     if transactional_effects:
