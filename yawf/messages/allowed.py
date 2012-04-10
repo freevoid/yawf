@@ -18,15 +18,13 @@ def get_allowed_messages(sender, obj, cache=None):
 
 def get_allowed_messages_for_many(sender, objects):
 
-    cache = {}
-
-    for obj in objects:
-        workflow = get_workflow_by_instance(obj)
-        _update_cache(cache, workflow, obj, sender)
+    # TODO: Build a cache for checkers that are independent from object
+    #       (use only sender arg). It can be done only if a checker
+    #       will be able to mark itself as `sender-only`.
 
     allowed_map = {}
     for obj in objects:
-        allowed_map[obj] = list(get_allowed_messages(sender, obj, cache=cache))
+        allowed_map[obj] = list(get_allowed_messages(sender, obj, cache=None))
 
     return allowed_map
 
@@ -40,13 +38,6 @@ def get_message_specs_for_many(sender, objects):
         allowed_map[obj] = map(workflow.get_message_spec, allowed_map[obj])
 
     return allowed_map
-
-
-def _update_cache(cache, workflow, obj, sender):
-
-    for c in workflow.get_message_checkers_by_state(obj.state):
-        if c not in cache:
-            cache[c] = c(obj, sender)
 
 
 def get_message_specs(sender, obj):
