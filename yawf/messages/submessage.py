@@ -4,17 +4,20 @@ class Submessage(object):
 
     need_lock_object = True
 
-    def __init__(self, obj, message_id, sender, params=None, need_lock_object=True):
+    def __init__(self, obj, message_id, sender,
+            params=None, need_lock_object=True, raw_params=None):
         self.obj = obj
         self.sender = sender
         self.message_id = message_id
         self.params = params
+        self.raw_params = raw_params
         self.need_lock_object = need_lock_object
         super(Submessage, self).__init__()
 
     def as_message(self, parent):
 
         return Message(self.sender, self.message_id,
+            raw_params=self.raw_params,
             clean_params=self.params,
             parent_message_id=parent.unique_id,
             message_group=parent.message_group,
@@ -32,10 +35,11 @@ class Submessage(object):
 
 class RecursiveSubmessage(Submessage):
 
-    def __init__(self, message_id, sender, params=None):
+    def __init__(self, message_id, sender, params=None, raw_params=None):
         super(RecursiveSubmessage, self).__init__(
             obj=None,
-            sender=sender, message_id=message_id, params=params)
+            sender=sender, message_id=message_id,
+            params=params, raw_params=raw_params)
 
     def dispatch(self, parent_obj, parent_message):
         from yawf.dispatch import dispatch_message
