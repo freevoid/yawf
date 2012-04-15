@@ -31,20 +31,27 @@ class YawfMessageView(MessageViewMixin, SingleObjectMixin, ProcessFormView):
         if hasattr(workflow, 'model_class'):
             return workflow.model_class
 
+    def get_yawf_object(self):
+        return self.object
+
     def post(self, request, *args, **kwargs):
 
-        obj = self.get_object()
+        view_obj = self.get_object()
+        self.object = view_obj
+
+        obj = self.get_yawf_object()
+
         if hasattr(obj, 'get_clarified_instance'):
             obj = obj.get_clarified_instance()
 
-        self.object = obj
+        self.yawf_object = obj
+
         msg_id = self.get_message_id()
         sender = self.get_sender()
 
         try:
             obj, handler_result, effect_result = dispatch.dispatch(obj, sender,
                     msg_id, self.request.POST)
-            self.object = obj
         except BaseException as e:
             return self.process_exception(obj, sender, msg_id, e)
         else:
