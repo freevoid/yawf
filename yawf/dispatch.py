@@ -89,7 +89,8 @@ def dispatch_message(obj, message, extra_context=None,
          * side effects results
     '''
     logger.debug(u"Backend got message from %s to %s: %s %s",
-            message.sender, obj, message.id, smart_unicode(message.raw_params))
+            smart_unicode(message.sender), smart_unicode(obj),
+            message.id, smart_unicode(message.raw_params))
 
     # can raise WorkflowNotLoadedError
     workflow = get_workflow_by_instance(obj)
