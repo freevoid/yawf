@@ -168,3 +168,24 @@ def maybe_list(a):
 
 def metadefaultdict(fabric):
     return lambda: defaultdict(fabric)
+
+
+def filter_handler_result(result, cls_to_filter):
+    if isinstance(result, Iterable):
+        return [
+            r for r in result
+            if isinstance(r, cls_to_filter)
+        ]
+    else:
+        return []
+
+
+def filter_side_effect_results(results, cls_to_filter):
+    filtered = []
+    for result in results:
+        if isinstance(result, Iterable):
+            filtered.extend(
+                r for r in result
+                if isinstance(r, cls_to_filter)
+            )
+    return filtered
