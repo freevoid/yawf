@@ -6,7 +6,9 @@ message_handled = Signal(
         'message',
         'instance',
         'new_instance',
-        'transition_result'
+        'transition_result',
+        'side_effect_result',
+        'log_record',
     ])
 
 transition_handled = Signal(

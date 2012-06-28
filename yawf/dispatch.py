@@ -150,6 +150,8 @@ def dispatch_message(obj, message, extra_context=None,
                 transition_result=transition_result)
 
             reversion.add_meta(revision_merger, message_log=log_record)
+        else:
+            log_record = None
 
     # TODO: send_robust + logging?
     message_handled.send(
@@ -158,7 +160,9 @@ def dispatch_message(obj, message, extra_context=None,
             message=message,
             instance=obj,
             new_instance=new_obj,
-            transition_result=transition_result)
+            transition_result=transition_result,
+            side_effect_result=side_effect_result,
+            log_record=log_record)
 
     return new_obj, transition_result, side_effect_result
 
