@@ -39,13 +39,11 @@ class Message(object):
             validator = validator_cls(self.raw_params)
 
             if validator.is_valid():
-                clean_params = validator.cleaned_data
+                self.clean_params = validator.cleaned_data
             else:
                 raise MessageValidationError(validator)
-        else:
-            clean_params = self.clean_params
 
-        self.params = message_spec.params_wrapper(clean_params)
+        self.params = message_spec.params_wrapper(self.clean_params)
         # fix id in case it was a list (group path)
         self.id = message_spec.id
         self.spec = message_spec
