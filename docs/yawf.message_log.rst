@@ -16,11 +16,3 @@ message_log Package
     :members:
     :undoc-members:
     :show-inheritance:
-
-Subpackages
------------
-
-.. toctree::
-
-    yawf.message_log.migrations
-

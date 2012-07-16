@@ -201,7 +201,6 @@ Subpackages
     yawf.management
     yawf.message_log
     yawf.messages
-    yawf.migrations
     yawf.resources
     yawf.revision
     yawf.tests
