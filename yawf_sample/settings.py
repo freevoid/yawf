@@ -41,7 +41,6 @@ INSTALLED_APPS = (
     'yawf.message_log',
     'yawf_sample.simple',
     'reversion',
-    'south',
     'django.contrib.admin',
 )
 
