@@ -73,14 +73,6 @@ yawf Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`dispatch_backup` Module
------------------------------
-
-.. automodule:: yawf.dispatch_backup
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`effects` Module
 ---------------------
 
@@ -109,6 +101,14 @@ yawf Package
 -------------------
 
 .. automodule:: yawf.graph
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`graph_views` Module
+-------------------------
+
+.. automodule:: yawf.graph_views
     :members:
     :undoc-members:
     :show-inheritance:
@@ -201,6 +201,7 @@ Subpackages
     yawf.management
     yawf.message_log
     yawf.messages
+    yawf.migrations
     yawf.resources
     yawf.revision
     yawf.tests

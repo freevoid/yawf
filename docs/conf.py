@@ -42,7 +42,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'yawf'
-copyright = u'2011, Author'
+copyright = u'2012, Nikolay Zakharov <nikolay@desh.su>'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -228,8 +228,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'yawf', u'yawf Documentation', u'Author',
-   'yawf', 'One line description of project.', 'Miscellaneous'),
+  ('index', 'yawf', u'yawf Documentation',
+   u'Nikolay Zakharov <nikolay@desh.su>', 'yawf', 'Yet Another Workflow Framework.',
+   ''),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -246,9 +247,9 @@ texinfo_documents = [
 
 # Bibliographic Dublin Core info.
 epub_title = u'yawf'
-epub_author = u'Author'
-epub_publisher = u'Author'
-epub_copyright = u'2011, Author'
+epub_author = u'Nikolay Zakharov <nikolay@desh.su>'
+epub_publisher = u'Nikolay Zakharov <nikolay@desh.su>'
+epub_copyright = u'2012, Nikolay Zakharov <nikolay@desh.su>'
 
 # The language of the text. It defaults to the language option
 # or en if the language is not set.

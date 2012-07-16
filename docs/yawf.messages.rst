@@ -17,14 +17,6 @@ messages Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`cleaning` Module
-----------------------
-
-.. automodule:: yawf.messages.cleaning
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`common` Module
 --------------------
 
@@ -45,6 +37,14 @@ messages Package
 ------------------------
 
 .. automodule:: yawf.messages.submessage
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`transformation` Module
+----------------------------
+
+.. automodule:: yawf.messages.transformation
     :members:
     :undoc-members:
     :show-inheritance:
