@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.utils.unittest import skipIf
 import reversion
 
 import yawf
@@ -215,6 +216,22 @@ class SimpleWorkflowTest(TestCase, WorkflowTestMixin):
         return yawf.creation.start_workflow(window, self.sender)
 
 
+def which(name):
+    """Searches for name in exec path and returns full path (from pygraphviz)"""
+    import os
+    import glob
+    paths = os.environ["PATH"]
+    if os.name == "nt":
+        exe = ".exe"
+    else:
+        exe = ""
+    for path in paths.split(os.pathsep):
+        match = glob.glob(os.path.join(path, name + exe))
+        if match:
+            return match[0]
+    return None
+
+
 class BuiltinViewTest(TestCase):
 
     def test_describe(self):
@@ -224,6 +241,8 @@ class BuiltinViewTest(TestCase):
         response = self.client.get('/describe/some_nonexist_workflow/')
         self.assertEqual(response.status_code, 404)
 
+    @skipIf(which('dot') is None,
+            "graphviz is not installed")
     def test_handlers_graph(self):
         response = self.client.get('/describe/simple/graph/handlers/')
         self.assertEqual(response.status_code, 200)
@@ -231,6 +250,8 @@ class BuiltinViewTest(TestCase):
         self.assertEqual(response['Content-Type'], 'image/png')
         self.assertTrue(len(response.content) > 1024)
 
+    @skipIf(which('dot') is None,
+            "graphviz is not installed")
     def test_effects_graph(self):
         response = self.client.get('/describe/simple/graph/effects/')
         self.assertEqual(response.status_code, 200)
