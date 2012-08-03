@@ -1,4 +1,3 @@
 coded_exceptions>=0.1
 django>=1.3
 django-reversion>=1.5
-pygraphviz>=1.0
