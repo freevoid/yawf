@@ -4,32 +4,55 @@ from setuptools import setup, find_packages, findall
 
 PACKAGE_ROOT = '.'
 PACKAGE_NAME = 'yawf'
+CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
+REQUIREMENTS_FILENAME = os.path.join(CURRENT_DIR, 'requirements', 'default.txt')
+README_FILENAME = 'README.rst'
 
-# populate namespace with __version__
-execfile(os.path.join(PACKAGE_ROOT, PACKAGE_NAME, 'version.py'))
 
-root_dir = os.path.abspath(os.path.dirname(__file__))
+def get_version():
+    # populate namespace with __version__
+    execfile(os.path.join(PACKAGE_ROOT, PACKAGE_NAME, 'version.py'))
+    return locals()['__version__']
 
-data_files = filter(
-    lambda name: not name.endswith('.py') and not name.endswith('.pyc'),
-    findall('yawf'))
-data_files = [x.split(os.sep, 2)[-1] for x in data_files]
+
+def get_requirements():
+    with open(REQUIREMENTS_FILENAME) as fp:
+        return fp.read().splitlines()
+
+
+def get_data_files():
+    data_files = filter(
+        lambda name: not name.endswith('.py') and not name.endswith('.pyc'),
+        findall('yawf'))
+    return [x.split(os.sep, 2)[-1] for x in data_files]
+
+
+def get_long_description():
+    return open(README_FILENAME).read()
+
 
 setup(
     name = PACKAGE_NAME,
-    version = __version__,
+    version = get_version(),
     package_dir = {'': PACKAGE_ROOT},
     packages = find_packages(PACKAGE_ROOT, exclude=('yawf_sample', 'yawf_sample.*')),
-    package_data = {'': data_files},
+    package_data = {'': get_data_files()},
 
     # Metadata
-    author = "Nikolay Zakharov",
-    author_email = "nikolay@desh.su",
-    keywords = "workflow state transition fsm django",
-
-    install_requires = [
-        "coded_exceptions>=0.1",
-        "django>=1.3",
-        "django-reversion>=1.5",
-    ]
+    author = 'Nikolay Zakharov',
+    author_email = 'nikolay@desh.su',
+    url = 'https://github.com/freevoid/yawf',
+    description = 'Yet Another Workflow Framework',
+    long_description = get_long_description(),
+    keywords = 'workflow state transition fsm django',
+    install_requires = get_requirements(),
+    license = 'MIT',
+    classifiers=[
+          'Development Status :: 4 - Beta',
+          'Intended Audience :: Developers',
+          'Framework :: Django',
+          'License :: OSI Approved :: MIT License',
+          'Operating System :: OS Independent',
+          'Programming Language :: Python',
+    ],
 )
