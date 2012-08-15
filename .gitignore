@@ -1,5 +1,6 @@
 *.py[co]
 build/
+dist/
 docs/_build/
 .ropeproject
 *.egg-info
