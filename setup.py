@@ -2,33 +2,34 @@ import os
 
 from setuptools import setup, find_packages, findall
 
-PACKAGE_ROOT = '.'
 PACKAGE_NAME = 'yawf'
 CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
-REQUIREMENTS_FILENAME = os.path.join(CURRENT_DIR, 'requirements', 'default.txt')
-README_FILENAME = 'README.rst'
+PACKAGE_ROOT = CURRENT_DIR
+REQUIREMENTS_FILEPATH = os.path.join(CURRENT_DIR, 'requirements', 'default.txt')
+README_FILEPATH = os.path.join(CURRENT_DIR, 'README.rst')
+VERSION_FILEPATH = os.path.join(CURRENT_DIR, PACKAGE_NAME, 'version.py')
 
 
 def get_version():
     # populate namespace with __version__
-    execfile(os.path.join(PACKAGE_ROOT, PACKAGE_NAME, 'version.py'))
+    execfile(VERSION_FILEPATH)
     return locals()['__version__']
 
 
 def get_requirements():
-    with open(REQUIREMENTS_FILENAME) as fp:
+    with open(REQUIREMENTS_FILEPATH) as fp:
         return fp.read().splitlines()
 
 
 def get_data_files():
     data_files = filter(
         lambda name: not name.endswith('.py') and not name.endswith('.pyc'),
-        findall('yawf'))
-    return [x.split(os.sep, 2)[-1] for x in data_files]
+        findall(PACKAGE_NAME))
+    return [x.split(os.sep, 1)[-1] for x in data_files]
 
 
 def get_long_description():
-    return open(README_FILENAME).read()
+    return open(README_FILEPATH).read()
 
 
 setup(
