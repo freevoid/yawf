@@ -125,7 +125,7 @@ def transactional_transition(workflow, obj, message, state_transition,
     # If action returned generator, evaluating it using special function
     if isinstance(transition_result, GeneratorType):
         handler_result, pending_calls, new_obj = _iterate_transition_result(
-            transition_result, message, obj)
+            transition_result, message, locked_obj)
     else:
         handler_result = transition_result
         pending_calls = []
