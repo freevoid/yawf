@@ -4,7 +4,6 @@ from setuptools import setup, find_packages, findall
 
 PACKAGE_NAME = 'yawf'
 CURRENT_DIR = os.path.abspath(os.path.dirname(__file__))
-PACKAGE_ROOT = CURRENT_DIR
 REQUIREMENTS_FILEPATH = os.path.join(CURRENT_DIR, 'requirements', 'default.txt')
 README_FILEPATH = os.path.join(CURRENT_DIR, 'README.rst')
 VERSION_FILEPATH = os.path.join(CURRENT_DIR, PACKAGE_NAME, 'version.py')
@@ -35,8 +34,7 @@ def get_long_description():
 setup(
     name = PACKAGE_NAME,
     version = get_version(),
-    package_dir = {'': PACKAGE_ROOT},
-    packages = find_packages(PACKAGE_ROOT, exclude=('yawf_sample', 'yawf_sample.*')),
+    packages = find_packages(CURRENT_DIR, exclude=('yawf_sample', 'yawf_sample.*')),
     package_data = {'': get_data_files()},
 
     # Metadata
