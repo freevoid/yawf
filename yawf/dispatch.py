@@ -138,7 +138,8 @@ def dispatch_message(obj, message, extra_context=None,
             transition_(
                 workflow, obj, message, state_transition,
                 extra_context=extra_context,
-                transactional_side_effect=transactional_side_effect)
+                transactional_side_effect=transactional_side_effect,
+                need_lock_object=need_lock_object)
 
         if MESSAGE_LOG_ENABLED:
             log_record = log_message(
