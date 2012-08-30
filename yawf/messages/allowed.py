@@ -75,6 +75,11 @@ class AllowedWrapper(object):
 
         return self._messages_lookup.get(message_id)
 
+    def __contains__(self, message_id):
+        if self._messages_lookup is None:
+            self._init_lookup()
+        return message_id in self._messages_lookup
+
     def __iter__(self):
         if self._specs is None:
             self._init_lookup()
