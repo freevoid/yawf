@@ -76,7 +76,9 @@ class AllowedWrapper(object):
         return self._messages_lookup.get(message_id)
 
     def __iter__(self):
-        return sorted(self._specs, key_func=attrgetter('rank'))
+        if self._specs is None:
+            self._init_lookup()
+        return iter(sorted(self._specs, key=attrgetter('rank')))
 
 
 def annotate_with_allowed_messages(sender, objects):
