@@ -10,6 +10,8 @@ DEFAULT_CONFIG = {
     'MESSAGE_LOG_ENABLED': False,
     'TRANSACTIONAL_SIDE_EFFECT': True,
     'USE_SELECT_FOR_UPDATE': True,
+    'REVISION_BACKEND':
+        'yawf.revision.backends.reversion.ReversionRevisionManager',
 }
 
 CONFIG = DEFAULT_CONFIG.copy()

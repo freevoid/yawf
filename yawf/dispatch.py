@@ -4,9 +4,8 @@ import copy
 from itertools import ifilter
 
 from django.utils.encoding import smart_unicode
-import reversion
 
-from yawf.message_log.models import log_message, revision_merger
+from yawf.message_log.models import log_message
 
 from yawf.config import STATE_TYPE_CONSTRAINT,\
          TRANSACTIONAL_SIDE_EFFECT, USE_SELECT_FOR_UPDATE, MESSAGE_LOG_ENABLED
@@ -17,6 +16,7 @@ from yawf.signals import message_handled
 from yawf import get_workflow_by_instance
 from yawf.messages import Message
 from yawf.state_transition import transition, transactional_transition
+from yawf.revision import default_revision_manager
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,8 @@ def dispatch_no_clean(obj, sender, message_id, params=None, extra_context=None):
 def dispatch_message(obj, message, extra_context=None,
         transactional_side_effect=TRANSACTIONAL_SIDE_EFFECT,
         need_lock_object=USE_SELECT_FOR_UPDATE,
-        defer_side_effect=False):
+        defer_side_effect=False,
+        revision_manager=None):
     '''
     Gets an object and message and performs all actions specified by
     object's workflow.
@@ -133,7 +134,10 @@ def dispatch_message(obj, message, extra_context=None,
     else:
         transition_ = transition
 
-    with reversion.create_revision():
+    if revision_manager is None:
+        revision_manager = default_revision_manager
+
+    with revision_manager() as m:
         new_obj, transition_result, side_effect_result =\
             transition_(
                 workflow, obj, message, state_transition,
@@ -150,7 +154,7 @@ def dispatch_message(obj, message, extra_context=None,
                 new_instance=new_obj,
                 transition_result=transition_result)
 
-            reversion.add_meta(revision_merger, message_log=log_record)
+            m.bind_revision(log_record)
         else:
             log_record = None
 

@@ -102,23 +102,5 @@ def log_message(sender, **kwargs):
     return log_record
 
 
-# revision_merger is a little hack for reversion to "merge" optional
-# revision information to message log records
-class ReversionMerger(object):
-
-    def create(self, revision, message_log):
-        message_log.revision = revision
-        message_log.save()
-
-    def db_manager(self, db):
-        return self
-
-    @property
-    def _default_manager(self):
-        return self
-
-revision_merger = ReversionMerger()
-
-
 def main_record_for_revision(revision):
     return revision.message_log.get(parent_uuid__isnull=True)
