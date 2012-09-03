@@ -2,6 +2,7 @@ import logging
 import collections
 
 from yawf.permissions import BasePermissionChecker, OrChecker
+from yawf.config import INITIAL_STATE
 
 logger = logging.getLogger(__name__)
 
@@ -140,6 +141,18 @@ class EditHandler(ComplexStateTransition):
         obj.save()
 
         return self.post_hook(obj)
+
+
+class LoopHandler(Handler):
+
+    def perform(self, obj, sender, **kwargs):
+        return getattr(obj, obj.workflow.state_attr_name)
+
+
+class StartWorkflowHandlerBase(SimpleStateTransition):
+
+    message_id = 'start_workflow'
+    states_from = [INITIAL_STATE]
 
 
 class SerializibleHandlerResult(object):
