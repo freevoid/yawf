@@ -200,14 +200,27 @@ def perform_side_effect(old_obj, new_obj,
     )
 
     if transactional_effects:
-        performed = [effect(**effect_kwargs) for effect in transactional_effects]
+        performed = [
+            _perform_side_effect(effect, effect_kwargs)
+            for effect in deferrable_effects]
     else:
         performed = []
+
     if deferrable_effects:
-        deferred = (effect(**effect_kwargs) for effect in deferrable_effects)
+        deferred = (
+            _perform_side_effect(effect, effect_kwargs)
+            for effect in deferrable_effects)
     else:
         deferred = []
     return performed, deferred
+
+
+def _perform_side_effect(effect, kwargs):
+    effect_result = effect(**kwargs)
+    if isinstance(effect_result, GeneratorType):
+        return list(effect_result)
+    else:
+        return effect_result
 
 
 def _iterate_transition_result(transition_result, message, obj):
