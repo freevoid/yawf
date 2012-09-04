@@ -49,8 +49,8 @@ class ResizeMessage(MessageSpec):
         return {'edit_fields': params}
 
 
-simple_workflow.register_message(message_spec_fabric(id='minimize', verb='Minimize window'))
-simple_workflow.register_message(message_spec_fabric(id='maximize'))
+simple_workflow.register_message(MessageSpec(id='minimize', verb='Minimize window'))
+simple_workflow.register_message(MessageSpec(id='maximize'))
 simple_workflow.register_message(message_spec_fabric(id='minimize_all'))
 simple_workflow.register_message(BasicStartMessage)
 

@@ -3,11 +3,14 @@ from django.utils.unittest import skipIf
 import reversion
 
 import yawf
+from yawf.exceptions import MessageSpecNotRegisteredError, UnhandledMessageError
 import yawf.creation
 import yawf.dispatch
+from yawf.handlers import Handler
 from yawf.revision.utils import (
     diff_fields, versions_diff, deserialize_revision, previous_version)
 from yawf.message_log.models import main_record_for_revision
+from yawf.messages.spec import MessageSpec
 from yawf.allowed import get_allowed
 
 yawf.autodiscover()
@@ -126,7 +129,9 @@ class SimpleWorkflowTest(WorkflowTestMixin, TestCase):
 
         # checking revision
         rev = deserialize_revision(message_revision)
-        version = rev.get_version_for_record(log_record)
+        versions = rev.get_versions_for_record(log_record)
+        self.assertEqual(len(versions), 1)
+        version = versions[0]
         self.assertEqual(last_version, version)
         previous = previous_version(version)
         diff = versions_diff(previous, version, full=True)
@@ -257,3 +262,41 @@ class BuiltinViewTest(TestCase):
         self.assertTrue(response.has_header('Content-Type'))
         self.assertEqual(response['Content-Type'], 'image/png')
         self.assertTrue(len(response.content) > 1024)
+
+
+class MessageGroupsTest(WorkflowTestMixin, TestCase):
+
+    workflow_id = 'message_groups'
+    sender = '__sender__'
+
+    def test_grouped_handlers_registration(self):
+        wf = self.get_workflow()
+        spec = wf.get_message_spec('hover')
+        self.assertIsInstance(spec, MessageSpec)
+
+        with self.assertRaises(MessageSpecNotRegisteredError):
+            wf.get_message_spec('hover__subhover')
+
+        spec = wf.get_message_spec('edit')
+        self.assertIsInstance(spec, MessageSpec)
+
+        spec = wf.get_message_spec('edit__title')
+        self.assertIsInstance(spec, MessageSpec)
+
+        handler = wf.get_handler(WINDOW_OPEN_STATUS.NORMAL, 'hover')
+        self.assertIsInstance(handler, Handler)
+
+        with self.assertRaises(UnhandledMessageError):
+            wf.get_handler(WINDOW_OPEN_STATUS.NORMAL, 'hover__subhover')
+
+        handler = wf.get_handler(WINDOW_OPEN_STATUS.NORMAL, 'edit__title')
+        self.assertIsInstance(handler, Handler)
+
+        handler = wf.get_handler(WINDOW_OPEN_STATUS.NORMAL, 'edit')
+        self.assertIsInstance(handler, Handler)
+
+
+class MinimalWorkflowTest(WorkflowTestMixin, TestCase):
+
+    workflow_id = 'minimal'
+    sender = '__sender__'
