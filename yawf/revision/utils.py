@@ -1,6 +1,6 @@
 import itertools as itr
 
-from django.utils.functional import SimpleLazyObject
+from django.contrib.contenttypes.models import ContentType
 from reversion.models import Version
 
 from yawf.utils import model_diff_fields, model_diff
@@ -74,11 +74,27 @@ class DeserializedRevision(object):
                 for o in group))
             for grouper, group in grouped)
 
-    def get_version_for_record(self, record):
-        dotted_model_name = '.'.join(
-            [record.content_type.app_label,
-            record.content_type.model])
-        return self._index.get(dotted_model_name, {}).get(record.object_id)
+    def get_version_for_object(self, content_type, object_id):
+        dotted_model_name = '%s.%s' % (
+            content_type.app_label, content_type.model)
+        return self._index.get(dotted_model_name, {}).get(object_id)
+
+    def get_versions_for_record(self, record):
+        model_cls = record.content_type.model_class()
+        version = self.get_version_for_object(
+            record.content_type, record.object_id)
+
+        versions = [version]
+
+        if model_cls._meta.parents:
+            for parent_model in model_cls._meta.parents.keys():
+                v = self.get_version_for_object(
+                    ContentType.objects.get_for_model(parent_model),
+                    record.object_id)
+                if v is not None:
+                    versions.append(v)
+
+        return versions
 
     def get_versions_for_content_type(self, ct):
         dotted_model_name = '.'.join(
@@ -87,10 +103,27 @@ class DeserializedRevision(object):
         return self._index.get(dotted_model_name, {}).values()
 
     def get_object_for_record(self, record):
-        return deserialize_version(self.get_version_for_record(record))
+        return deserialize_inherited_versions(self.get_versions_for_record(record))
 
 
 def deserialize_version(version):
     return deserialize(version.serialized_data, version.format)
+
+
+def fill_child_with_parent_fields(child, parent):
+    for field in parent._meta.fields:
+        setattr(child, field.name, getattr(parent, field.name))
+
+
+def deserialize_inherited_versions(versions):
+    objs = [obj
+        for (deserialization_result, obj)
+        in map(deserialize_version, versions)
+        if deserialization_result
+    ]
+    child = objs[0].object
+    for obj in objs[1:]:
+        fill_child_with_parent_fields(child, obj.object)
+    return child
 
 deserialize_revision = DeserializedRevision
