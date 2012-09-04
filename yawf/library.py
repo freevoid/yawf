@@ -127,6 +127,13 @@ class Library(object):
 
     def message(self, message_spec):
 
+        if inspect.isclass(message_spec) and\
+                issubclass(message_spec, MessageSpec):
+            message_spec = message_spec()
+
+        if not isinstance(message_spec, MessageSpec):
+            raise TypeError('Message spec must be an instance or a subclass of MessageSpec')
+
         # register in flat registry
         if message_spec.id in self._registered_message_id_set:
             raise ValueError("Message spec already registered for message '%s'" %

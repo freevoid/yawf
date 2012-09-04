@@ -15,44 +15,6 @@ class EmptyValidator(object):
         return {}
 
 
-class MessageSpecMeta(type):
-    '''
-    MessageSpec metaclass to support inline validators.
-
-    If message spec defines inline class with name ``Validator'', it
-    would be used instead of ``validator_cls''.
-    '''
-
-    def __new__(cls, name, bases, attrs):
-        if 'Validator' in attrs:
-            attrs['validator_cls'] = attrs['Validator']
-
-        new_cls = super(MessageSpecMeta, cls).__new__(cls, name, bases, attrs)
-
-        grouper = new_cls.id_grouper
-        message_id = new_cls.id
-
-        if message_id is None:
-            if not (len(bases) == 1 and bases[0] is object):
-                raise ValueError(
-                    'You must specify not-None id for MessageSpec subclass')
-        else:
-            if grouper in message_id:
-                new_cls.group_path = message_id.split(grouper)
-                new_cls.is_grouped = True
-            else:
-                new_cls.group_path = []
-                new_cls.is_grouped = False
-
-            if new_cls.verb is None:
-                new_cls.verb = new_cls.id
-
-        return new_cls
-
-    def __unicode__(cls):
-        return unicode(cls.verb) or type.__str__(cls)
-
-
 class MessageSpec(object):
     '''
     Specifies a message that can be passed to workflow.
@@ -64,10 +26,6 @@ class MessageSpec(object):
       * how to validate parameters for this message (using ``validator_cls'');
       * priority (``rank'' attribute).
     '''
-
-    # meta used to support inline Validator
-    __metaclass__ = MessageSpecMeta
-
     # unique (in scope of single workflow) message id (typically str)
     id = None
     # human-friendly name for action
@@ -80,8 +38,33 @@ class MessageSpec(object):
     id_grouper = '__'
     is_grouped = False
 
-    @classmethod
-    def params_wrapper(cls, params):
+    def __init__(self, **attrs):
+        super(MessageSpec, self).__init__()
+
+        if hasattr(self, 'Validator'):
+            self.validator_cls = self.Validator
+
+        for attr, value in attrs.iteritems():
+            setattr(self, attr, value)
+
+        grouper = self.id_grouper
+        message_id = self.id
+
+        if message_id is None:
+            raise ValueError(
+                'You must specify not-None id for MessageSpec subclass')
+        else:
+            if grouper in message_id:
+                self.group_path = message_id.split(grouper)
+                self.is_grouped = True
+            else:
+                self.group_path = [message_id]
+                self.is_grouped = False
+
+            if self.verb is None:
+                self.verb = self.id
+
+    def params_wrapper(self, params):
         '''
         Wrapper used to wrap cleaned_data returned by validator_cls
         before passing it to handler.
@@ -93,8 +76,7 @@ class MessageSpec(object):
         '''
         return params
 
-    @classmethod
-    def dehydrate_params(cls, obj, message):
+    def dehydrate_params(self, obj, message):
         '''
         Method, that returns dehydrated message params for serialization.
         '''

@@ -41,8 +41,7 @@ class WorkflowTestMixin(object):
         self.assertIsInstance(handler, yawf.handlers.Handler)
 
     def _test_message_spec(self, spec):
-        self.assertTrue(hasattr(spec, '__bases__'))
-        self.assertIsInstance(spec, yawf.messages.spec.MessageSpecMeta)
+        self.assertIsInstance(spec, yawf.messages.spec.MessageSpec)
         self.assertIsInstance(spec.id, basestring)
         self.assertTrue(hasattr(spec, 'validator_cls'))
         self.assertTrue(hasattr(spec.validator_cls, 'is_valid'))
@@ -52,7 +51,7 @@ class WorkflowTestMixin(object):
         w.validate()
 
 
-class SimpleWorkflowTest(TestCase, WorkflowTestMixin):
+class SimpleWorkflowTest(WorkflowTestMixin, TestCase):
 
     workflow_id = 'simple'
     sender = '__sender__'

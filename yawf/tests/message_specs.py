@@ -13,19 +13,18 @@ class MessageSpecsTestCase(TestCase):
         class Spec1(MessageSpec):
             id = 'edit'
 
-        self.assertFalse(Spec1.is_grouped)
+        self.assertFalse(Spec1().is_grouped)
 
         class SpecWithGrouping(MessageSpec):
             id = 'edit__personality__name'
-        self.assertTrue(SpecWithGrouping.is_grouped)
+        self.assertTrue(SpecWithGrouping().is_grouped)
 
     def test_without_id(self):
 
-        def defining_wrong_spec():
-            class WrongSpec(MessageSpec):
-                verb = 'push me!'
+        class WrongSpec(MessageSpec):
+            verb = 'push me!'
 
-        self.assertRaises(ValueError, defining_wrong_spec)
+        self.assertRaises(ValueError, WrongSpec)
 
     def test_validator(self):
 
@@ -39,7 +38,7 @@ class MessageSpecsTestCase(TestCase):
             id = 'test'
             validator_cls = CustomValidator
 
-        v = Spec.validator_cls({})
+        v = Spec().validator_cls({})
         self.assertTrue(v.is_valid())
         self.assertItemsEqual(
             v.cleaned_data,
@@ -52,7 +51,7 @@ class MessageSpecsTestCase(TestCase):
                 is_valid = lambda self: True
                 cleaned_data = {'foo': 'bar'}
 
-        v = Spec2.validator_cls({})
+        v = Spec2().validator_cls({})
         self.assertTrue(v.is_valid())
         self.assertItemsEqual(
             v.cleaned_data,
@@ -64,16 +63,16 @@ class MessageSpecsTestCase(TestCase):
 
             id = 'foo'
 
-        self.assertEqual(unicode(SpecWithoutVerb), 'foo')
+        self.assertEqual(unicode(SpecWithoutVerb()), 'foo')
 
         class SpecWithVerb(SpecWithoutVerb):
 
             verb = 'foobar'
 
-        self.assertEqual(unicode(SpecWithVerb), 'foobar')
+        self.assertEqual(unicode(SpecWithVerb()), 'foobar')
 
     def test_fabric(self):
 
         spec = message_spec_fabric(id='cancel')
         self.assertEqual(spec.id, 'cancel')
-        self.assertTrue(issubclass(spec, MessageSpec))
+        self.assertTrue(isinstance(spec, MessageSpec))
