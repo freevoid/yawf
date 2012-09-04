@@ -127,6 +127,8 @@ class Library(object):
 
     def message(self, message_spec):
 
+        to_return = message_spec
+
         if inspect.isclass(message_spec) and\
                 issubclass(message_spec, MessageSpec):
             message_spec = message_spec()
@@ -160,7 +162,7 @@ class Library(object):
         if self._is_index_built:
             self.rebuild_index()
 
-        return message_spec
+        return to_return
 
     def message_by_form(self, message_id=None, message_id_list=None,
             base_spec=MessageSpec, **attrs):
