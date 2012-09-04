@@ -19,9 +19,6 @@ class MessageLog(models.Model):
         get_latest_by = 'created_at'
         ordering = ('created_at',)
 
-    revision = models.ForeignKey('reversion.Revision',
-            blank=True, null=True, related_name='message_log')
-
     uuid = models.CharField(max_length=36,
         db_index=True, unique=True)
 
@@ -38,8 +35,10 @@ class MessageLog(models.Model):
     initiator_content_type = models.ForeignKey(ContentType,
             related_name='message_logs_initiator',
             null=True, blank=True)
-    initiator_object_id = models.PositiveIntegerField(db_index=True, null=True, blank=True)
-    initiator = generic.GenericForeignKey('initiator_content_type', 'initiator_object_id')
+    initiator_object_id = models.PositiveIntegerField(
+            db_index=True, null=True, blank=True)
+    initiator = generic.GenericForeignKey(
+            'initiator_content_type', 'initiator_object_id')
 
     message = models.CharField(max_length=32)
     message_params = models.TextField()
@@ -49,9 +48,15 @@ class MessageLog(models.Model):
 
     workflow_id = models.CharField(max_length=64, db_index=True, default='')
     parent_uuid = models.CharField(max_length=36,
-        db_index=True, null=True, blank=True)
+            db_index=True, null=True, blank=True)
     group_uuid = models.CharField(max_length=36,
-        db_index=True, null=True, blank=True)
+            db_index=True, null=True, blank=True)
+
+    revision_content_type = models.ForeignKey(ContentType,
+            null=True, blank=True, related_name='message_logs_revision')
+    revision_id = models.PositiveIntegerField(
+            db_index=True, null=True, blank=True)
+    revision = generic.GenericForeignKey('revision_content_type', 'revision_id')
 
     deserialized_params = json.json_converter(
         'message_params')
@@ -103,4 +108,8 @@ def log_message(sender, **kwargs):
 
 
 def main_record_for_revision(revision):
-    return revision.message_log.get(parent_uuid__isnull=True)
+    ct = ContentType.objects.get_for_model(type(revision))
+    return MessageLog.objects.get(
+        revision_content_type=ct,
+        revision_id=revision.pk,
+        parent_uuid__isnull=True)
