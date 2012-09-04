@@ -45,6 +45,9 @@ setup(
     long_description = get_long_description(),
     keywords = 'workflow state transition fsm django',
     install_requires = get_requirements(),
+    extras_require = {
+        'reversion': ['django-reversion>=1.5'],
+    },
     license = 'MIT',
     classifiers=[
           'Development Status :: 4 - Beta',
