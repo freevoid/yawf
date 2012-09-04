@@ -13,17 +13,16 @@ def message_spec_fabric(id, verb=None, rank=0, base_spec=MessageSpec, **attrs):
     return base_spec(**attrs)
 
 
-BasicCancelMessage = MessageSpec(
-    id='cancel',
-    verb=_('cancel'),
-    rank=1000,
-)
+class BasicCancelMessage(MessageSpec):
+    id = 'cancel'
+    verb = _('cancel')
+    rank = 1000
 
-BasicDeleteMessage = MessageSpec(
-    id='delete',
-    verb=_('delete'),
-    rank=1001,
-)
+
+class BasicDeleteMessage(MessageSpec):
+    id = 'delete'
+    verb = _('delete')
+    rank = 1001
 
 
 class BasicEditMessage(MessageSpec):
@@ -37,7 +36,6 @@ class BasicEditMessage(MessageSpec):
         return {'edit_fields': params}
 
 
-BasicStartMessage = MessageSpec(
-    id='start_workflow',
-    verb=_('create'),
-)
+class BasicStartMessage(MessageSpec):
+    id = 'start_workflow'
+    verb = _('create')
