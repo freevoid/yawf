@@ -252,7 +252,6 @@ class Library(object):
                 message_id=message_id, **options)
 
     def rebuild_index(self):
-
         self._init_index_containers()
 
         # Build index for handlers
@@ -522,7 +521,7 @@ class Library(object):
         for group_id in group_path:
             cur_level = cur_level.get(group_id, None)
             if not cur_level:
-                raise GroupPathEmptyError(group_path)
+                return []
         return map(attrgetter('id'), cur_level.itervalues())
 
     def _init_containers(self):

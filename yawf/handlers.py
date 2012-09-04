@@ -55,6 +55,8 @@ class Handler(object):
         if message_group is not None:
             if isinstance(message_group, basestring):
                 self.message_group = [message_group]
+                if self.message_id is None:
+                    self.message_id = message_group
             else:
                 assert isinstance(message_group, collections.Iterable)
         elif self.message_id is None:
