@@ -41,13 +41,14 @@ class Dispatcher(object):
         self.options = options
         super(Dispatcher, self).__init__()
 
-    def __getattribute__(self, name):
-        message_id = name
-        return lambda **raw_params:\
-            dispatch(self.obj, self.sender, message_id,
-                    raw_params,
-                    **self.options)
+    def __getattr__(self, name):
+        return lambda **raw_params: self._dispatch(name, **raw_params)
 
+    def _dispatch(self, message_id, **raw_params):
+        new_obj, handler_result, effects_result = dispatch(
+            self.obj, self.sender, message_id, raw_params, **self.options)
+        self.obj = new_obj
+        return new_obj, handler_result, effects_result
 
 
 def dispatch(obj, sender, message_id, raw_params=None,
