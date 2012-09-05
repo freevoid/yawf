@@ -1,27 +1,61 @@
 {% extends "yawf/base.html" %}
 
+{% block head %}
+    <style>
+        .warning {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
-<p>ID: {{ workflow.id }}</p>
-<p>Verbose name: {{ workflow.verbose_name }}</p>
-<p>Model class: {{ workflow.model_cls }}</p>
+<p>ID: <b>{{ workflow.id }}</b></p>
+<p>Verbose name: {% if workflow.verbose_name %}{{ workflow.verbose_name }}{% else %}<span class="warning">not specified</span>{% endif %}</p>
+
+{% if not workflow.model_class %}
+<p class="warning">Model class is not specified</p>
+{% endif %}
 
 <p>
     States:
     <ul>
-        {% for state_id, verbose_name in workflow.verbose_state_names.items %}
-        <li>{{ state_id }} ({{ verbose_name }})</li>
+{% for state_id, state_info in state_map.iteritems %}
+    {% if state_info.messages %}
+        <li>{{ state_id }} ({{ state_info.verbose_name }})
+            <br/><i>Available messages:</i>
+            <ul>
+        {% for message_id in state_info.messages %}
+                <li>{{ message_id }}</li>
         {% endfor %}
+            </ul>
+        </li>
+    {% else %}
+        <li class="warning" title="No messages with registered handlers">{{ state_id }} ({{ state_info.verbose_name }})</li>
+    {% endif %}
+{% endfor %}
     </ul>
 </p>
 
 <p>
     Registered messages:
     <ul>
-        {% for message_id, spec in workflow.get_message_specs.iteritems %}
-            <li>{{ message_id }}{% if spec.verb %} ({{ spec }}){% endif %}</li>
-        {% empty %}
-            <li style="color: red; font-weight: bold;">No messages registered</li>
+{% for message_id, message_info in message_map.iteritems %}
+        <li>{{ message_id }}{% if message_info.spec.verb %} ({{ message_info.spec }}){% endif %}
+    {% if not message_info.states_from %}
+            <span class="warning">No handlers registered</span>
+    {% else %}
+            <br/><i>States from which this message can be handled:</i>
+            <ul>
+        {% for state in message_info.states_from %}
+                <li>{{ state }}</li>
         {% endfor %}
+            </ul>
+    {% endif %}
+        </li>
+{% empty %}
+        <li class="warning">No messages registered</li>
+{% endfor %}
     </ul>
 </p>
 {% endblock %}

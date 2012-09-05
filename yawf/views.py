@@ -96,5 +96,32 @@ def describe_workflow(request, workflow_id):
     w = get_workflow(workflow_id)
     if w is None:
         raise Http404
+
+    state_map = \
+        dict(
+            (state, {
+                'verbose_name': w.verbose_state_names.get(state),
+                'messages': [
+                    message
+                    for (_checker, message)
+                    in w.library.get_available_messages(state)
+                ],
+            })
+            for state in w.states)
+
+    message_map = \
+        dict(
+            (message_id, {
+                'spec': spec,
+                'states_from':
+                    w.library.get_handlers_index_for_message(message_id).keys(),
+            })
+            for (message_id, spec)
+            in w.library.get_message_specs().iteritems())
+
     return TemplateResponse(request, 'yawf/describe_workflow.html',
-            {'workflow': w})
+                            {
+                                'workflow': w,
+                                'state_map': state_map,
+                                'message_map': message_map
+                            })
