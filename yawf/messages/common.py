@@ -31,10 +31,6 @@ class BasicEditMessage(MessageSpec):
     verb = _('change')
     rank = 900
 
-    @staticmethod
-    def params_wrapper(params):
-        return {'edit_fields': params}
-
 
 class BasicStartMessage(MessageSpec):
     id = 'start_workflow'
