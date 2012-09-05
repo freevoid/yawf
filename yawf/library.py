@@ -318,7 +318,7 @@ class Library(object):
         return self.get_handlers(state, message_id)[0]
 
     @touches_index
-    def get_handlers(self, state, message_id):
+    def get_handlers(self, state, message_id, safe=False):
         '''
         Return Handler instances to handle ``message_id'' for workflow in state
         ``state''.
@@ -327,22 +327,29 @@ class Library(object):
             Current basic state of workflow.
         :param message_id:
             id of incoming message.
-
-        If there are no handler for this message_id, raises
-        UnhandledMessageError(message_id).
+        :param safe:
+            Boolean. If there are no handler for this message_id, get_handlers()
+            raises UnhandledMessageError(message_id) if safe=False and returns an
+            empty list if safe=True.
         '''
         key = (state, message_id)
         handlers = self._handler_index.get(key)
 
         if not handlers:
-            if state is None:
-                return self._handler_message_index.get(message_id, [])
-            elif message_id is None:
-                return self._handler_state_index.get(state, [])
-            else:
+            if not safe:
                 raise UnhandledMessageError(message_id)
+            else:
+                return []
 
         return handlers
+
+    @touches_index
+    def get_handlers_index_for_state(self, state):
+        return self._handler_state_index.get(state, {})
+
+    @touches_index
+    def get_handlers_index_for_message(self, message_id):
+        return self._handler_message_index.get(message_id, {})
 
     def get_effect(self, from_state, to_state, message_id):
         effects = self.get_effects(from_state, to_state, message_id)
@@ -412,7 +419,7 @@ class Library(object):
 
     def get_available_messages(self, state):
 
-        lookup_result = self.get_handlers(state, None)
+        lookup_result = self.get_handlers_index_for_state(state)
 
         if not lookup_result:
             if state not in self.valid_states:
