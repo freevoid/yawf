@@ -1,12 +1,29 @@
 {% extends "yawf/base.html" %}
 
 {% block head %}
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>
     <style>
         .warning {
             color: red;
             font-weight: bold;
         }
+        .hidden {
+            display: none;
+        }
+        .toggler {
+            font-style: italic;
+            cursor: pointer;
+            border-bottom: 1px dotted;
+        }
     </style>
+
+    <script>
+        $(document).ready(function(){
+            $(".toggler").click(function(){
+                $(this).siblings("ul").toggleClass("hidden");
+            });
+        });
+    </script>
 {% endblock %}
 
 {% block content %}
@@ -23,8 +40,8 @@
 {% for state_id, state_info in state_map.iteritems %}
     {% if state_info.messages %}
         <li>{{ state_id }} ({{ state_info.verbose_name }})
-            <br/><i>Available messages:</i>
-            <ul>
+            <br/><span class="toggler">Available messages</span>
+            <ul class="hidden">
         {% for message_id in state_info.messages %}
                 <li>{{ message_id }}</li>
         {% endfor %}
@@ -45,8 +62,8 @@
     {% if not message_info.states_from %}
             <span class="warning">No handlers registered</span>
     {% else %}
-            <br/><i>States from which this message can be handled:</i>
-            <ul>
+            <br/><span class="toggler">States from which this message can be handled</span>
+            <ul class="hidden">
         {% for state in message_info.states_from %}
                 <li>{{ state }}</li>
         {% endfor %}
