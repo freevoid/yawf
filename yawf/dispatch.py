@@ -49,30 +49,30 @@ class Dispatcher(object):
                     **self.options)
 
 
-def dispatch(obj, sender, message_id,
-        raw_params=None,
-        extra_context=None):
+
+def dispatch(obj, sender, message_id, raw_params=None,
+             **dispatch_options):
     '''
     High-level shortcut function to send a message to workflow-enabled object.
 
     See :py:func:`dispatch_message` for detailed information.
     '''
     message = Message(sender, message_id, raw_params)
-    return dispatch_message(
-        obj, message, extra_context=extra_context)
+    return dispatch_message(obj, message, **dispatch_options)
 
 
-def dispatch_no_clean(obj, sender, message_id, params=None, extra_context=None):
+def dispatch_no_clean(obj, sender, message_id, params=None,
+                      **dispatch_options):
     message = Message(sender, message_id, clean_params=params)
-    return dispatch_message(
-        obj, message, extra_context=extra_context)
+    return dispatch_message(obj, message, **dispatch_options)
 
 
-def dispatch_message(obj, message, extra_context=None,
-        transactional_side_effect=TRANSACTIONAL_SIDE_EFFECT,
-        need_lock_object=USE_SELECT_FOR_UPDATE,
-        defer_side_effect=False,
-        revision_manager=None):
+def dispatch_message(obj, message,
+                     extra_context=None,
+                     transactional_side_effect=TRANSACTIONAL_SIDE_EFFECT,
+                     need_lock_object=USE_SELECT_FOR_UPDATE,
+                     defer_side_effect=False,
+                     revision_manager=None):
     '''
     Gets an object and message and performs all actions specified by
     object's workflow.
