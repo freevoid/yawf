@@ -1,4 +1,5 @@
 import pygraphviz
+from django.utils.encoding import smart_str
 
 
 def build_effects_graph(workflow):
@@ -9,6 +10,7 @@ def build_effects_graph(workflow):
         g.add_node(state)
 
     for (state_from, state_to, message), _effects in workflow.library.iter_effects():
+        state_from, state_to, message = map(smart_str, (state_from, state_to, message))
         g.add_edge(state_from, state_to, message)
         e = g.get_edge(state_from, state_to, message)
         e.attr['label'] = message
@@ -43,11 +45,13 @@ def build_handlers_graph(workflow):
                     if state_to == '_':
                         state_to = state_from
 
+                    state_from, state_to, message = map(smart_str, (state_from, state_to, message))
                     g.add_edge(state_from, state_to, message)
                     e = g.get_edge(state_from, state_to, message)
                     e.attr['label'] = message
                     e.attr['style'] = style
             else:
+                state_from, message = smart_str(state_from), smart_str(message)
                 g.add_edge(state_from, unknown_state, message)
                 e = g.get_edge(state_from, unknown_state, message)
                 e.attr['label'] = message
