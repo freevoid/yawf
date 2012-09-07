@@ -60,4 +60,3 @@ class Message(object):
 
 
 from .submessage import Submessage
-from .transformation import TransformationResult

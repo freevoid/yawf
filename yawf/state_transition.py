@@ -13,7 +13,7 @@ from yawf import get_workflow_by_instance
 from yawf.exceptions import OldStateInconsistenceError,\
          ConcurrentRevisionUpdate
 from yawf.messages.submessage import Submessage
-from yawf.messages.transformation import TransformationResult
+from yawf.transformation import TransformationResult
 
 logger = logging.getLogger(__name__)
 
