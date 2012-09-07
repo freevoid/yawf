@@ -59,7 +59,7 @@ def transactional_transition(workflow, obj, message, state_transition,
     `commit_on_success` to wrap itself in single transaction.
 
     :param workflow:
-        :py:class:`yawf.base.WorkflowBase` instance, representing object's
+        :py:class:`yawf.workflow.WorkflowBase` instance, representing object's
         workflow.
     :param obj:
         Workflow aware object.

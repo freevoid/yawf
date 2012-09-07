@@ -1,4 +1,4 @@
-from yawf.base import WorkflowBase
+from yawf.workflow import WorkflowBase
 from yawf.handlers import StartWorkflowHandlerBase
 from yawf.messages.common import BasicStartMessage
 

@@ -4,7 +4,7 @@ from yawf.config import DEFAULT_START_MESSAGE, WORKFLOW_TYPE_ATTR
 from yawf import get_workflow, get_workflow_by_instance
 from yawf import dispatch
 from yawf.exceptions import WorkflowNotLoadedError, CreateValidationError
-from yawf.base import WorkflowBase
+from yawf.workflow import WorkflowBase
 
 
 class CreationAwareWorkflow(WorkflowBase):
