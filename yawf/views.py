@@ -101,11 +101,11 @@ def describe_workflow(request, workflow_id):
         dict(
             (state, {
                 'verbose_name': w.verbose_state_names.get(state),
-                'messages': [
+                'messages': sorted(
                     message
                     for (_checker, message)
                     in w.library.get_available_messages(state)
-                ],
+                ),
             })
             for state in w.states)
 
@@ -114,7 +114,10 @@ def describe_workflow(request, workflow_id):
             (message_id, {
                 'spec': spec,
                 'states_from':
-                    w.library.get_handlers_index_for_message(message_id).keys(),
+                    sorted(
+                        w.library
+                         .get_handlers_index_for_message(message_id)
+                         .keys()),
             })
             for (message_id, spec)
             in w.library.get_message_specs().iteritems())
