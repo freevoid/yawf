@@ -77,7 +77,3 @@ class SideEffect(object):
     @property
     def name(self):
         return self.__class__.__name__
-
-
-# for backward-compatibility
-SideEffectAction = SideEffect
