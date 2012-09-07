@@ -4,10 +4,9 @@ from yawf.creation import CreationAwareWorkflow
 from yawf.messages.common import message_spec_fabric, BasicStartMessage, MessageSpec
 from yawf.messages.submessage import Submessage, RecursiveSubmessage
 
-from yawf.actions import SideEffect
+from yawf.effects import SideEffect
 from yawf.handlers import SimpleStateTransition, Handler, ComplexStateTransition
 from yawf.utils import make_common_updater
-from yawf.annotation import annotate_handler
 
 from yawf_sample.simple.models import Window, WINDOW_OPEN_STATUS
 
@@ -80,7 +79,6 @@ class MinimizeAll(ComplexStateTransition):
         for child_window in obj.children.all():
             yield (yield Submessage(child_window, 'minimize', sender))
 
-@annotate_handler(states_to=('normal',))
 @simple_workflow.register_handler(states_from=['maximized', 'minimized'])
 def to_normal(obj, sender):
     return 'normal'
@@ -90,7 +88,6 @@ class Edit(Handler):
 
     message_group = 'edit'
     states_to = ['_']
-    is_annotated = True
 
     def perform(self, obj, sender, edit_fields):
         return make_common_updater(edit_fields)
