@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.contenttypes import generic
 
 
 class RevisionModelMixin(models.Model):
@@ -11,8 +10,6 @@ class RevisionModelMixin(models.Model):
 
     revision = models.PositiveIntegerField(default=0,
         db_index=True, editable=False)
-
-    versions = generic.GenericRelation('reversion.Version')
 
     def save(self, *args, **kwargs):
         self.revision += 1
