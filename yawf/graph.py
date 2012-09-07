@@ -34,13 +34,20 @@ def build_handlers_graph(workflow):
 
     for ((state_from, message), handlers) in workflow.library.iter_handlers():
         for handler in handlers:
-            if hasattr(handler, 'is_annotated'):
-                if len(handler.states_to) > 1:
+            if hasattr(handler, 'state_to'):
+                states_to = [handler.state_to]
+            elif hasattr(handler, 'states_to'):
+                states_to = handler.states_to
+            else:
+                states_to = None
+
+            if states_to is not None:
+                if len(states_to) > 1:
                     style = 'dashed'
                 else:
                     style = 'solid'
 
-                for state_to in handler.states_to:
+                for state_to in states_to:
 
                     if state_to == '_':
                         state_to = state_from
